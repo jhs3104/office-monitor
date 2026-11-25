@@ -1,0 +1,16 @@
+{
+  "name": "office-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "office-monitor": "server.mjs"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

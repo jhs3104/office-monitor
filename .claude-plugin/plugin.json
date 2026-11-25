@@ -1,0 +1,18 @@
+{
+  "name": "office-monitor",
+  "version": "0.1.0",
+  "description": "Claude Code 메인 세션과 서브에이전트의 작업을 사무실 장면과 타임라인으로 보여 주는 로컬 모니터. hook이 127.0.0.1의 로컬 서버(node server.mjs)로 이벤트를 보내고, 서버가 꺼져 있으면 연결이 거절되어 아무것도 하지 않는다.",
+  "keywords": [
+    "subagents",
+    "hooks",
+    "monitor",
+    "visualizer"
+  ],
+  "author": {
+    "name": "jhs3104",
+    "url": "https://github.com/jhs3104"
+  },
+  "homepage": "https://github.com/jhs3104/office-monitor",
+  "repository": "https://github.com/jhs3104/office-monitor",
+  "license": "MIT"
+}

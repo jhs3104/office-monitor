@@ -1,0 +1,14 @@
+{
+  "name": "office",
+  "owner": {
+    "name": "jhs3104",
+    "url": "https://github.com/jhs3104"
+  },
+  "plugins": [
+    {
+      "name": "office-monitor",
+      "source": "./",
+      "description": "서브에이전트 작업 모니터(타임라인·인력사무소 뷰)"
+    }
+  ]
+}

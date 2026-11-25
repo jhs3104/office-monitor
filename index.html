@@ -1,0 +1,1511 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>서브에이전트 모니터 · office</title>
+<style>
+  :root {
+    --bg: #eef0f3;
+    --panel: #ffffff;
+    --panel-2: #f6f7f9;
+    --line: #e1e4ea;
+    --line-strong: #cdd2db;
+    --ink: #141922;
+    --ink-2: #4f5866;
+    --ink-3: #6b7380;
+    --accent: #2343d1;
+    --accent-soft: #e6eafc;
+
+    --c-search: #4f74a8;
+    --c-edit: #23866a;
+    --c-shell: #a87719;
+    --c-web: #7656ad;
+    --c-agent: #141922;
+    --c-wait: #c98a12;
+
+    --ok: #23866a;
+    --fail: #c23b32;
+    --fail-soft: #fbeceb;
+    --wait: #a8700a;
+    --wait-soft: #fdf3df;
+
+    --row: 44px;
+    --label-w: 300px;
+    --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Segoe UI", "Noto Sans KR", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --ease: cubic-bezier(.16, 1, .3, 1);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.45 var(--font);
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+  ::selection { background: var(--accent); color: #fff; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  * { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+
+  .app { display: grid; grid-template-rows: auto 1fr; height: 100vh; min-height: 560px; }
+
+  /* ── top bar ───────────────────────────── */
+  .bar {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    padding: 12px 20px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  .session { display: flex; flex-direction: column; min-width: 0; flex: 1 1 240px; }
+  .session h1 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .session h1 #title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .session h1 .demo-tag { margin-left: 0; flex: none; }
+  .session p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .session p { margin: 0; color: var(--ink-3); font-size: 12.5px; }
+  .demo-tag {
+    font-size: 11.5px; color: var(--ink-2); background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; margin-left: 8px;
+    font-weight: 500; vertical-align: 2px;
+  }
+  .counts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .count {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--line); background: var(--panel);
+    border-radius: 999px; padding: 4px 11px 4px 9px; font-size: 13px; color: var(--ink-2);
+    cursor: pointer; transition: background-color .18s var(--ease), border-color .18s var(--ease);
+  }
+  .count b { color: var(--ink); font-weight: 650; }
+  .count:hover { background: var(--panel-2); }
+  .count[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .clock { font: 600 15px/1 var(--mono); color: var(--ink); min-width: 64px; text-align: right; }
+  .controls { display: flex; gap: 4px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 32px; min-width: 32px; padding: 0 10px;
+    border: 1px solid var(--line-strong); border-radius: 7px; background: var(--panel);
+    color: var(--ink); font: 500 13px var(--font); cursor: pointer;
+    transition: background-color .15s var(--ease);
+  }
+  .btn:hover { background: var(--panel-2); }
+  .btn:active { background: var(--line); }
+  .btn svg { width: 15px; height: 15px; }
+  .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 7px; overflow: hidden; }
+  .seg button {
+    height: 30px; padding: 0 9px; border: 0; background: var(--panel); color: var(--ink-2);
+    font: 500 12.5px var(--mono); cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+
+  /* ── main ──────────────────────────────── */
+  .main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; min-height: 0; }
+  .board { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+    padding: 10px 20px; font-size: 12.5px; color: var(--ink-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 12px; height: 8px; border-radius: 2px; display: inline-block; }
+  .sw.wait { background: repeating-linear-gradient(135deg, var(--c-wait) 0 2px, transparent 2px 4px); border: 1px solid var(--c-wait); }
+
+  .lanes { flex: 1; overflow: auto; position: relative; }
+  .lanes-inner { position: relative; min-width: 860px; }
+  .axis {
+    position: sticky; top: 0; z-index: 3;
+    display: grid; grid-template-columns: var(--label-w) 1fr;
+    background: var(--bg); border-bottom: 1px solid var(--line);
+    height: 30px;
+  }
+  .axis .lh { padding: 0 20px; align-self: center; font-size: 12px; color: var(--ink-3); }
+  .ticks { position: relative; margin-right: 24px; }
+  .tick { position: absolute; top: 0; bottom: 0; font: 11.5px/30px var(--mono); color: var(--ink-3); transform: translateX(-50%); white-space: nowrap; }
+
+  .rows { position: relative; }
+  .row {
+    display: grid; grid-template-columns: var(--label-w) 1fr; height: var(--row);
+    border-bottom: 1px solid var(--line);
+    cursor: pointer; transition: background-color .15s var(--ease), opacity .2s var(--ease);
+  }
+  .row:hover { background: rgba(255,255,255,.55); }
+  .row[aria-selected="true"] { background: var(--panel); }
+  .row[aria-selected="true"] .label { box-shadow: inset 0 0 0 1.5px var(--accent); border-radius: 0; }
+  .row.pending { opacity: .38; }
+  .row.dim { opacity: .3; }
+  .label {
+    display: flex; align-items: center; gap: 9px; min-width: 0;
+    padding: 0 12px 0 calc(20px + var(--depth, 0) * 18px);
+    border-right: 1px solid var(--line);
+  }
+  .tree-mark { width: 12px; height: 12px; flex: none; color: var(--line-strong); }
+  .label .txt { min-width: 0; display: flex; flex-direction: column; }
+  .label .name { font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; }
+  .label .meta { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--line-strong); position: relative; }
+  .st-running .dot { background: var(--accent); }
+  .st-running .dot::after {
+    content: ""; position: absolute; inset: -4px; border-radius: 50%;
+    border: 2px solid var(--accent); opacity: 0; animation: ping 1.6s var(--ease) infinite;
+  }
+  .st-waiting .dot { background: var(--c-wait); }
+  .st-done .dot { background: var(--ok); }
+  .st-failed .dot { background: var(--fail); }
+  @keyframes ping { 0% { transform: scale(.6); opacity: .7 } 100% { transform: scale(1.5); opacity: 0 } }
+
+  .track { position: relative; margin-right: 24px; }
+  .life {
+    position: absolute; top: 50%; height: 2px; margin-top: -1px;
+    background: var(--line-strong); border-radius: 2px;
+  }
+  .st-running .life, .st-waiting .life { background: #9aa8e6; }
+  .st-failed .life { background: #e3a7a2; }
+  .ev {
+    position: absolute; top: 50%; height: 16px; margin-top: -8px; min-width: 3px;
+    border-radius: 3px; cursor: default;
+    box-shadow: 0 1px 2px rgba(20,25,34,.18);
+  }
+  .ev:hover { filter: brightness(1.12); z-index: 2; box-shadow: 0 2px 6px rgba(20,25,34,.28); }
+  .ev.search { background: var(--c-search); }
+  .ev.edit   { background: var(--c-edit); }
+  .ev.shell  { background: var(--c-shell); }
+  .ev.web    { background: var(--c-web); }
+  .ev.agent  { background: var(--c-agent); height: 22px; margin-top: -11px; width: 3px !important; min-width: 3px; border-radius: 2px; }
+  .ev.wait {
+    background: repeating-linear-gradient(135deg, var(--c-wait) 0 3px, #fdf3df 3px 6px);
+    border: 1px solid var(--c-wait); box-shadow: none;
+  }
+  .ev.err { background: var(--fail); }
+  .ev.other { background: #8a93a3; }
+  .select {
+    height: 32px; max-width: 320px; padding: 0 30px 0 10px; border: 1px solid var(--line-strong); border-radius: 7px;
+    background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%234f5866' stroke-width='1.6'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") no-repeat right 8px center / 14px;
+    appearance: none; font: 500 13px var(--font); color: var(--ink); cursor: pointer; text-overflow: ellipsis;
+  }
+  .select:hover { background-color: var(--panel-2); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .demo-tag.live { color: var(--ok); border-color: #bfe0d4; background: #f1f9f6; }
+  .demo-tag.off { color: var(--fail); border-color: #efc3bf; background: var(--fail-soft); }
+  .no-data { padding: 48px 20px; color: var(--ink-2); max-width: 560px; }
+  .no-data strong { display: block; color: var(--ink); font-size: 15px; margin-bottom: 6px; }
+  .no-data code { font-family: var(--mono); font-size: 12.5px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+  .end-mark {
+    position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px;
+    border-radius: 50%; border: 2px solid var(--ok); background: var(--panel);
+  }
+  .st-failed .end-mark { border-color: var(--fail); }
+  .st-failed .end-mark::before, .st-failed .end-mark::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 2px; margin: -1px 0 0 -3px;
+    background: var(--fail); transform: rotate(45deg);
+  }
+  .st-failed .end-mark::after { transform: rotate(-45deg); }
+
+  .links { position: absolute; left: var(--label-w); right: 24px; top: 0; bottom: 0; pointer-events: none; }
+  .link { position: absolute; width: 0; border-left: 1.5px dashed #9aa3b1; }
+  .link::after {
+    content: ""; position: absolute; bottom: -4px; left: -4.5px;
+    border: 4px solid transparent; border-top: 5px solid #9aa3b1; border-bottom: 0;
+  }
+  .now {
+    position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.5px solid var(--accent);
+    z-index: 2; pointer-events: none;
+  }
+  .now span {
+    position: absolute; top: 4px; left: 4px; font: 600 11px var(--mono); color: var(--accent);
+    background: var(--bg); padding: 0 3px; border-radius: 3px; white-space: nowrap;
+  }
+
+  /* ── detail ────────────────────────────── */
+  .detail {
+    min-width: 0;
+    background: var(--panel); border-left: 1px solid var(--line);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .d-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); }
+  .d-status {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600;
+    padding: 3px 10px 3px 8px; border-radius: 999px; background: var(--panel-2); color: var(--ink-2);
+  }
+  .d-status.st-running { background: var(--accent-soft); color: var(--accent); }
+  .d-status.st-waiting { background: var(--wait-soft); color: var(--wait); }
+  .d-status.st-done { background: #e5f3ee; color: var(--ok); }
+  .d-status.st-failed { background: var(--fail-soft); color: var(--fail); }
+  .d-head h2 { margin: 10px 0 2px; font-size: 18px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.3; }
+  .d-head .sub { color: var(--ink-3); font-size: 12.5px; font-family: var(--mono); }
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); margin: 14px 0 0; border: 1px solid var(--line); border-radius: 8px; }
+  .facts div { padding: 8px 10px; }
+  .facts div + div { border-left: 1px solid var(--line); }
+  .facts dt { font-size: 11.5px; color: var(--ink-3); }
+  .facts dd { margin: 0; font: 600 14px var(--mono); }
+
+  .d-body { overflow: auto; flex: 1; padding: 16px 20px 24px; }
+  .d-body h3 { font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin: 0 0 8px; }
+  .prompt {
+    margin: 0 0 20px; padding: 10px 12px; background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 8px; font-size: 13px; color: var(--ink); line-height: 1.55;
+  }
+  .result { margin: 0 0 20px; padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.55; border: 1px solid #bfe0d4; background: #f1f9f6; }
+  .result.fail { border-color: #efc3bf; background: var(--fail-soft); }
+  .result.waiting { border-color: #ecd29b; background: var(--wait-soft); }
+  .result strong { display: block; font-size: 12.5px; margin-bottom: 2px; }
+
+  .log { list-style: none; margin: 0; padding: 0; position: relative; }
+  .log li {
+    display: grid; grid-template-columns: 52px 14px 1fr; gap: 8px; align-items: start;
+    padding: 6px 0; font-size: 12.5px; border-bottom: 1px dashed var(--line);
+  }
+  .log li.fresh { animation: in .35s var(--ease); }
+  @keyframes in { from { background: var(--accent-soft); } to { background: transparent; } }
+  .log time { font-family: var(--mono); color: var(--ink-3); font-size: 11.5px; padding-top: 1px; }
+  .log .k { width: 10px; height: 10px; border-radius: 2px; margin-top: 4px; }
+  .log .tool { font-weight: 600; font-family: var(--mono); font-size: 12px; }
+  .log .arg { color: var(--ink-2); font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+  .log .live { color: var(--accent); font-size: 11.5px; font-weight: 600; }
+  .empty { color: var(--ink-3); font-size: 13px; padding: 12px 0; }
+  .empty strong { color: var(--ink-2); display: block; font-weight: 600; }
+
+  .tip {
+    position: fixed; z-index: 10; pointer-events: none; max-width: 320px;
+    background: var(--ink); color: #fff; border-radius: 7px; padding: 7px 10px;
+    font-size: 12px; line-height: 1.45; box-shadow: 0 6px 18px rgba(20,25,34,.28);
+    opacity: 0; transform: translateY(4px); transition: opacity .12s var(--ease), transform .12s var(--ease);
+  }
+  .tip.on { opacity: 1; transform: none; }
+  .tip b { font-family: var(--mono); }
+  .tip em { font-style: normal; color: #b9c0cc; font-family: var(--mono); display: block; word-break: break-all; }
+
+
+  /* ── 오피스 뷰 ─────────────────────────── */
+  .legend-items { display: inline-flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .view-tabs button { font-family: var(--font); font-size: 12.5px; padding: 0 12px; }
+  .office { flex: 1; min-height: 0; overflow: auto; position: relative; padding: 16px 20px 24px; }
+  #office-svg { width: 100%; max-width: 1240px; height: auto; display: block; margin: 0 auto; }
+  #office-svg text { user-select: none; -webkit-user-select: none; }
+  #office-svg .agency-sign { font: 750 22px var(--font); fill: var(--ink); letter-spacing: -0.02em; }
+  #office-svg .clock-label { font: 600 12.5px var(--mono); fill: var(--ink-2); }
+  #office-svg .desk-plaque { font: 700 11px var(--font); fill: #f3e6d4; }
+  #boss-chip .chip-bg { fill: #fff; stroke: #e3dccf; }
+  #boss-chip .chip-text { font: 600 13px var(--font); fill: var(--ink); }
+
+  #office-svg .room { cursor: pointer; }
+  #office-svg .room-box { fill: #fff; stroke: #e1e4ea; stroke-width: 1.5; transition: fill .25s var(--ease), stroke .25s var(--ease); }
+  #office-svg .room:hover .room-box { stroke: #c9cfd9; }
+  #office-svg .room-rug { fill: #f3f5f8; transition: fill .25s var(--ease); }
+  #office-svg .room-door { fill: #e2e6ec; }
+  #office-svg .plate-name { font: 700 16px var(--font); fill: var(--ink); letter-spacing: -0.01em; }
+  #office-svg .plate-no { font: 500 12px var(--font); fill: var(--ink-3); }
+  #office-svg .room-status text { font: 600 13px var(--font); fill: var(--ink-2); }
+  #office-svg .room.idle .room-status text { fill: #a0a7b3; font-weight: 500; }
+  #office-svg .room.empty { cursor: default; }
+  #office-svg .room.empty .plate-name { fill: var(--ink-3); font-weight: 600; }
+  #office-svg .room.empty .room-box { fill: #f7f8fa; stroke-dasharray: 6 6; }
+  #office-svg .room.empty .furniture { opacity: .4; }
+  #office-svg .zz-icon { font: 700 10px var(--font); fill: #fff; }
+  #office-svg .room-lamp { fill: #dde1e7; transition: fill .2s var(--ease); }
+  #office-svg .room-screen { fill: #4a5363; transition: fill .2s var(--ease); }
+  #office-svg .room.st-running .room-lamp { fill: var(--accent); }
+  #office-svg .room.st-running .room-status text { fill: var(--accent); }
+  #office-svg .room.st-waiting .room-box { fill: var(--wait-soft); stroke: var(--c-wait); }
+  #office-svg .room.st-waiting .room-rug { fill: #f7e6c1; }
+  #office-svg .room.st-waiting .room-lamp { fill: var(--c-wait); animation: lamp 1.2s ease-in-out infinite; }
+  #office-svg .room.st-waiting .room-status text { fill: var(--wait); }
+  #office-svg .room.st-failed .room-box { fill: var(--fail-soft); stroke: #e3a7a2; }
+  #office-svg .room.st-failed .room-rug { fill: #f5d7d3; }
+  #office-svg .room.st-failed .room-lamp { fill: var(--fail); }
+  #office-svg .room.st-failed .room-status text { fill: var(--fail); }
+  #office-svg .room.st-done .room-lamp { fill: var(--ok); }
+  @keyframes lamp { 50% { opacity: .35; } }
+
+  .worker { cursor: pointer; outline: none; transition: opacity .4s var(--ease); }
+  .worker .shadow { fill: rgba(20,25,34,.10); }
+  .worker .leg { fill: #39424f; transform-box: fill-box; transform-origin: 50% 0; }
+  .worker .head { fill: #f6dcc6; }
+  .worker .hair { fill: #40352e; }
+  .worker .eye { fill: #1d2430; }
+  .worker .cheek { fill: #f0a48f; opacity: .5; }
+  .worker .mouth { fill: none; stroke: #8c5b4a; stroke-width: 1.3; stroke-linecap: round; }
+  .worker .paper { fill: #fff; stroke: #c9ced8; display: none; }
+  .worker.carry .paper { display: inline; }
+  .worker .arm { transform-box: fill-box; transform-origin: 50% 12%; }
+  .worker .mark { display: none; }
+  .worker .mark circle { stroke: #fff; stroke-width: 2; }
+  .worker .zz { display: none; font: 700 12px var(--font); fill: #a7aebb; }
+  .worker.m-slack .zz { display: inline; }
+  .worker.m-slack .zz text { animation: zz 2.4s ease-in-out infinite; }
+  .worker.m-slack .zz .z2 { animation-delay: .6s; font-size: 10px; }
+  .worker.m-slack .head-g { transform: rotate(-8deg); transform-box: fill-box; transform-origin: 50% 100%; }
+  @keyframes zz { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+  .worker .name { font: 650 12px var(--font); fill: var(--ink-2); paint-order: stroke; stroke: #eef0f3; stroke-width: 4px; }
+  .worker .ring { fill: rgba(35,67,209,.06); stroke: var(--accent); stroke-width: 1.5; opacity: 0; transition: opacity .15s var(--ease); }
+  .worker:hover .ring { opacity: .5; }
+  .worker.selected .ring, .worker:focus-visible .ring { opacity: 1; }
+  .worker.st-failed .fig { filter: grayscale(.8); opacity: .8; }
+  .worker.dim { opacity: .25; }
+
+  /* 상태를 전하는 움직임만: 걷기, 일하기, 손들기, 생각하기, 졸기 */
+  .worker.walking .leg.l { animation: stepL .46s ease-in-out infinite; }
+  .worker.walking .leg.r { animation: stepL .46s ease-in-out infinite reverse; }
+  .worker.walking .bobber { animation: bob .23s ease-in-out infinite alternate; }
+  .worker.m-work .arm { animation: work .5s ease-in-out infinite alternate; }
+  .worker.m-wait .arm { transform: rotate(-160deg); }
+  .worker.m-think .head-g { animation: tilt 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+  @keyframes stepL { 0%, 100% { transform: rotate(20deg); } 50% { transform: rotate(-20deg); } }
+  @keyframes bob { to { transform: translateY(-2px); } }
+  @keyframes work { from { transform: rotate(-15deg); } to { transform: rotate(-65deg); } }
+  @keyframes tilt { 50% { transform: rotate(7deg); } }
+
+  /* 누르면 뜨는 카드 */
+  .pop {
+    position: absolute; z-index: 5; width: 340px; max-width: calc(100% - 16px);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(20,25,34,.14), 0 2px 6px rgba(20,25,34,.06);
+    font-size: 13px;
+  }
+  .pop header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; border-bottom: 1px solid var(--line); }
+  .pop header div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .pop header strong { font-size: 14.5px; font-weight: 650; }
+  .pop header span { font-size: 12px; color: var(--ink-3); }
+  .pop .sw-type { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+  .pop-st { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 2px 9px 2px 7px;
+    border-radius: 999px; background: var(--panel-2); color: var(--ink-2); white-space: nowrap; }
+  .pop-st .dot { width: 7px; height: 7px; }
+  .pop-st.st-running { background: var(--accent-soft); color: var(--accent); }
+  .pop-st.st-running .dot { background: var(--accent); }
+  .pop-st.st-waiting { background: var(--wait-soft); color: var(--wait); }
+  .pop-st.st-waiting .dot { background: var(--c-wait); }
+  .pop-st.st-done { background: #e5f3ee; color: var(--ok); }
+  .pop-st.st-done .dot { background: var(--ok); }
+  .pop-st.st-failed { background: var(--fail-soft); color: var(--fail); }
+  .pop-st.st-failed .dot { background: var(--fail); }
+  .pop section { padding: 10px 16px; }
+  .pop section + section { border-top: 1px dashed var(--line); }
+  .pop h4 { margin: 0 0 4px; font-size: 11.5px; font-weight: 600; color: var(--ink-3); }
+  .pop p { margin: 0; line-height: 1.5; }
+  .pop p + p { margin-top: 4px; }
+  .pop .task { font-weight: 600; }
+  .pop .sub { color: var(--ink-2); font-size: 12.5px; }
+  .pop .mono { font: 12px/1.5 var(--mono); color: var(--ink-2); overflow-wrap: anywhere; }
+  .pop .pop-now p:first-of-type { display: flex; align-items: center; gap: 7px; font-weight: 600; }
+  .pop .pop-now i { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+  .pop .pop-now time { font: 500 11.5px var(--mono); color: var(--ink-3); margin-left: auto; }
+  .pop .pop-now.st-waiting { background: var(--wait-soft); }
+  .pop .pop-now.st-failed { background: var(--fail-soft); }
+  .pop .recent, .pop .people { list-style: none; margin: 0; padding: 0; }
+  .pop .recent li { display: grid; grid-template-columns: 9px auto 1fr auto; gap: 7px; align-items: center; padding: 3px 0; font-size: 12px; }
+  .pop .recent i { width: 9px; height: 9px; border-radius: 3px; }
+  .pop .recent b { font: 600 12px var(--mono); }
+  .pop .recent span { color: var(--ink-2); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pop .recent time { font: 11px var(--mono); color: var(--ink-3); }
+  .pop .people button { width: 100%; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 8px; text-align: left;
+    background: none; border: 0; border-radius: 8px; padding: 6px 8px; margin: 0 -8px; cursor: pointer; font: inherit; color: inherit; }
+  .pop .people button:hover { background: var(--panel-2); }
+  .pop .people b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pop .people span:not(.pop-st):not(.dot) { grid-row: 2; font-size: 12px; color: var(--ink-3); }
+  .pop .people .pop-st { grid-row: 1 / 3; grid-column: 2; align-self: center; }
+  .pop footer { padding: 10px 16px 14px; border-top: 1px solid var(--line); }
+  .pop footer .btn { height: 30px; font-size: 12.5px; }
+
+  @media (max-width: 1100px) {
+    .main { grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr minmax(280px, 42vh); }
+    .detail { border-left: 0; border-top: 1px solid var(--line); }
+  }
+  @media (max-width: 720px) {
+    :root { --label-w: 190px; }
+    .bar { gap: 10px; padding: 10px 14px; }
+    .counts { margin-left: 0; order: 3; width: 100%; }
+    .legend { padding: 8px 14px; gap: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="session">
+      <h1><span id="title">결제 모듈 리팩터링</span> <span class="demo-tag" id="mode-tag">샘플 데이터</span></h1>
+      <p id="subtitle">메인 세션 · claude-opus-5-5 · ~/project/office</p>
+    </div>
+    <div class="counts" role="group" aria-label="상태별 필터">
+      <button class="count st-running" data-filter="running" aria-pressed="false"><span class="dot"></span>실행 중 <b id="n-running">0</b></button>
+      <button class="count st-waiting" data-filter="waiting" aria-pressed="false"><span class="dot"></span>승인 대기 <b id="n-waiting">0</b></button>
+      <button class="count st-done" data-filter="done" aria-pressed="false"><span class="dot"></span>완료 <b id="n-done">0</b></button>
+      <button class="count st-failed" data-filter="failed" aria-pressed="false"><span class="dot"></span>실패 <b id="n-failed">0</b></button>
+    </div>
+    <div class="clock" id="clock" aria-live="off">0:00</div>
+    <div class="controls" id="live-controls" hidden>
+      <label class="sr" for="session-select">세션</label>
+      <select id="session-select" class="select"></select>
+    </div>
+    <div class="controls" id="demo-controls">
+      <button class="btn" id="play" aria-label="일시정지"></button>
+      <button class="btn" id="restart" aria-label="처음부터 재생">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.8-4.1"/><path d="M2.5 2.5v3h3"/></svg>
+      </button>
+      <div class="seg" role="group" aria-label="재생 속도">
+        <button data-speed="1" aria-pressed="false">1×</button>
+        <button data-speed="4" aria-pressed="true">4×</button>
+        <button data-speed="12" aria-pressed="false">12×</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="main">
+    <section class="board" aria-label="에이전트 타임라인">
+      <div class="legend">
+        <div class="seg view-tabs" role="group" aria-label="보기 전환">
+          <button data-view="office" aria-pressed="true">오피스</button>
+          <button data-view="timeline" aria-pressed="false">타임라인</button>
+        </div>
+        <span class="legend-items" id="legend-office">사장이 일감을 주면 그 유형 직원이 사장실로 가서 일을 받고 자기 자리로 돌아와 일합니다 · 사람이나 방을 누르면 역할과 지금 하는 일이 보입니다</span>
+        <span class="legend-items" id="legend-items" hidden>
+        <span><i class="sw" style="background:var(--c-search)"></i>탐색 (Read·Grep·Glob)</span>
+        <span><i class="sw" style="background:var(--c-edit)"></i>수정 (Edit·Write)</span>
+        <span><i class="sw" style="background:var(--c-shell)"></i>Bash</span>
+        <span><i class="sw" style="background:var(--c-web)"></i>웹 (WebFetch·Search)</span>
+        <span><i class="sw" style="background:var(--c-agent);width:3px;height:12px"></i>서브에이전트 호출</span>
+        <span><i class="sw wait"></i>권한 승인 대기</span>
+        </span>
+      </div>
+      <div class="lanes" id="lanes" hidden>
+        <div class="lanes-inner">
+          <div class="axis"><div class="lh">에이전트</div><div class="ticks" id="ticks"></div></div>
+          <div class="rows" id="rows" role="listbox" aria-label="에이전트 목록"></div>
+          <div class="links" id="links"></div>
+        </div>
+      </div>
+      <div class="office" id="office">
+        <svg id="office-svg" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMin meet" role="img" aria-label="사무실 보기: 사장실과 유형별 직원 방"></svg>
+        <div class="pop" id="office-pop" role="dialog" aria-label="직원 정보" hidden></div>
+      </div>
+    </section>
+    <aside class="detail" id="detail" aria-live="polite"></aside>
+  </div>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+/* ── 공통 모델 ────────────────────────────────
+   agent = { id, parent, name, type, model, start, end(null=진행 중), failed, error, prompt, result,
+             evs: [{ tool, arg, t0, t1(null=진행 중), cat, tok }] }
+   시간은 모두 "세션 시작으로부터 초" 단위. */
+
+const SCENARIO = [
+  { id: "main", parent: null, name: "메인 세션", type: "main", model: "opus-5-5", start: 0,
+    prompt: "결제 모듈(PaymentService)을 결제/환불 책임으로 분리하고, 기존 테스트를 유지한 채 리뷰까지 마쳐 줘.",
+    result: "분리 완료. 테스트 148개 통과, 리뷰 지적 2건 보고.",
+    events: [
+      ["Read", "CLAUDE.md", 2, 1800], ["Agent", "Explore · 결제 모듈 구조 파악", 0.1, 400],
+      ["Agent", "Explore · 테스트 위치 탐색", 0.1, 400], ["Agent", "web-fetch · PG사 API 문서", 0.1, 400],
+      ["gap", "", 14], ["Agent", "web-fetch · PG사 API 문서 (재시도)", 0.1, 400], ["gap", "", 16],
+      ["Read", "src/payment/PaymentService.kt", 3, 5200], ["Agent", "Plan · 리팩터링 설계안", 0.1, 600],
+      ["gap", "", 34], ["Read", "plan.md", 2, 2400],
+      ["Agent", "general-purpose · PaymentService 분리", 0.1, 700],
+      ["Agent", "general-purpose · Refund 흐름 이관", 0.1, 700], ["gap", "", 88],
+      ["Bash", "./gradlew :payment:test", 6, 3100], ["Agent", "code-reviewer · 변경분 리뷰", 0.1, 500],
+      ["gap", "", 48], ["Read", "review.md", 2, 2600], ["gap", "", 3]
+    ] },
+  { id: "a1", parent: "main", name: "결제 모듈 구조 파악", type: "Explore", model: "haiku-5-5", start: 2.1,
+    prompt: "src/payment 아래 결제·환불 관련 클래스와 의존 관계를 정리해 줘. 결론만, medium 범위.",
+    result: "PaymentService가 결제·환불·정산 3가지 책임을 가짐. 외부 의존 4개.",
+    events: [["Glob", "src/payment/**/*.kt", 1.5, 900], ["Grep", "class .*Service", 2, 1400], ["Read", "PaymentService.kt", 3, 5200],
+      ["Read", "RefundPolicy.kt", 2, 2100], ["Grep", "pgClient\\.", 2, 1300], ["Read", "PgClient.kt", 3, 3300],
+      ["Read", "SettlementJob.kt", 2.5, 2600], ["Grep", "@Transactional", 1.5, 900], ["Read", "PaymentRepository.kt", 2, 1800]] },
+  { id: "a2", parent: "main", name: "기존 테스트 위치 탐색", type: "Explore", model: "haiku-5-5", start: 2.2,
+    prompt: "결제 관련 테스트 파일 위치와 픽스처 구성을 찾아 줘.",
+    result: "테스트 12개 파일, 공용 픽스처는 PaymentFixtures.kt.",
+    events: [["Glob", "src/test/**/*Payment*", 1.5, 700], ["Grep", "@SpringBootTest", 2, 1100], ["Read", "PaymentServiceTest.kt", 3, 4100],
+      ["Read", "PaymentFixtures.kt", 2, 1900], ["Glob", "src/test/**/*Refund*", 1, 600]] },
+  { id: "a3", parent: "main", name: "PG사 API 문서 확인", type: "web-fetch", model: "sonnet-5-5", start: 2.3,
+    prompt: "PG사 환불 API의 부분 환불 파라미터와 멱등키 규칙을 확인해 줘.",
+    error: "403 Forbidden — 문서 사이트가 자동 수집을 차단함.",
+    events: [["WebSearch", "PG 부분환불 API idempotency", 3, 1500], ["WebFetch", "https://docs.pg.example/refund", 5, 300], ["error", "403 Forbidden", 0.6, 0]] },
+  { id: "a4", parent: "main", name: "PG사 API 문서 확인 (재시도)", type: "web-fetch", model: "sonnet-5-5", start: 16.5,
+    prompt: "공개 개발자 포털 경로로 PG사 환불 API 문서를 다시 확인해 줘.",
+    result: "부분 환불은 cancelAmount, 멱등키는 Idempotency-Key 헤더(24시간 유효).",
+    events: [["WebSearch", "PG developer portal refund", 2.5, 1400], ["WebFetch", "https://developers.pg.example/refund", 6, 6800],
+      ["WebFetch", "https://developers.pg.example/idempotency", 4, 3900]] },
+  { id: "a5", parent: "main", name: "리팩터링 설계안", type: "Plan", model: "opus-5-5", start: 39.2,
+    prompt: "탐색 결과를 바탕으로 PaymentService를 분리하는 단계별 계획과 위험 요소를 정리해 줘.",
+    result: "3단계 계획: 인터페이스 추출 → 환불 이관 → 정산 분리(이번 범위 제외).",
+    events: [["Read", "PaymentService.kt", 3, 5200], ["Read", "RefundPolicy.kt", 2, 2100], ["Grep", "refund\\(", 2, 1200],
+      ["Read", "SettlementJob.kt", 3, 2600], ["Grep", "PaymentService", 2.5, 1600], ["Read", "build.gradle.kts", 2, 1300],
+      ["Write", "plan.md", 4, 3800], ["Read", "plan.md", 1.5, 900]] },
+  { id: "a6", parent: "main", name: "PaymentService 분리", type: "general-purpose", model: "sonnet-5-5", start: 61.3,
+    prompt: "plan.md 1단계: PaymentService에서 결제 승인 책임을 PaymentApprover로 추출해 줘.",
+    result: "PaymentApprover 추출, 호출부 6곳 수정, 단위 테스트 통과.",
+    events: [["Read", "plan.md", 1.5, 900], ["Read", "PaymentService.kt", 3, 5200], ["Write", "PaymentApprover.kt", 6, 4600],
+      ["Edit", "PaymentService.kt", 5, 3900], ["Grep", "paymentService.approve", 2, 1100], ["Edit", "CheckoutController.kt", 3, 2200],
+      ["Edit", "OrderFacade.kt", 3, 2100], ["permission", "Bash: ./gradlew :payment:test", 11, 0],
+      ["Bash", "./gradlew :payment:test", 14, 3600], ["Edit", "PaymentApprover.kt", 3, 1900], ["Bash", "./gradlew :payment:test --tests *Approver*", 9, 2400]] },
+  { id: "a7", parent: "main", name: "Refund 흐름 이관", type: "general-purpose", model: "sonnet-5-5", start: 61.4,
+    prompt: "plan.md 2단계: 환불 로직을 RefundService로 옮기고 PG 멱등키 규칙을 반영해 줘.",
+    result: "RefundService 신설, Idempotency-Key 적용, 기존 테스트 전부 통과.",
+    events: [["Read", "plan.md", 1.5, 900], ["Agent", "Explore · 환불 호출부 검색", 0.1, 500], ["gap", "", 17],
+      ["Write", "RefundService.kt", 7, 5400], ["Edit", "PaymentService.kt", 4, 3100], ["Edit", "PgClient.kt", 4, 2800],
+      ["Edit", "RefundController.kt", 3, 2000], ["Bash", "./gradlew :payment:compileKotlin", 8, 1500],
+      ["Edit", "RefundService.kt", 3, 1800], ["Bash", "./gradlew :payment:test --tests *Refund*", 12, 2900], ["Write", "RefundServiceTest.kt", 6, 4200],
+      ["Bash", "./gradlew :payment:test --tests *Refund*", 10, 2700]] },
+  { id: "a8", parent: "a7", name: "환불 호출부 검색", type: "Explore", model: "haiku-5-5", start: 63.1,
+    prompt: "refund( 를 호출하는 모든 지점을 찾아 목록으로 돌려줘.",
+    result: "호출부 9곳(컨트롤러 2, 배치 3, 퍼사드 4).",
+    events: [["Grep", "\\.refund\\(", 2, 1100], ["Read", "RefundController.kt", 2, 1700], ["Read", "RefundBatch.kt", 3, 2200],
+      ["Grep", "cancelPayment", 2, 900], ["Read", "OrderFacade.kt", 3, 2400], ["Read", "AdminRefundFacade.kt", 2.5, 1800]] },
+  { id: "a9", parent: "main", name: "변경분 리뷰", type: "code-reviewer", model: "opus-5-5", start: 164.4,
+    prompt: "src/payment 변경분을 리뷰해 줘. 범위: 결제·환불 분리 커밋 전 diff.",
+    result: "지적 2건: 멱등키 만료 처리 누락, 환불 실패 로그에 카드번호 일부 노출.",
+    events: [["Bash", "git diff --stat", 1.5, 800], ["Bash", "git diff src/payment", 3, 7400], ["Read", "RefundService.kt", 3, 5400],
+      ["Read", "PaymentApprover.kt", 2.5, 4600], ["Grep", "log\\.(info|warn|error)", 2, 1300], ["Read", "PgClient.kt", 3, 2800],
+      ["Grep", "Idempotency-Key", 1.5, 700], ["Read", "RefundServiceTest.kt", 3, 4200], ["Write", "review.md", 5, 3600]] }
+];
+
+const CAT = { Read: "search", Grep: "search", Glob: "search", LS: "search", Edit: "edit", Write: "edit", MultiEdit: "edit",
+  NotebookEdit: "edit", Bash: "shell", BashOutput: "shell", WebFetch: "web", WebSearch: "web", Agent: "agent", Task: "agent",
+  permission: "wait", error: "err" };
+const catOf = tool => CAT[tool] || (tool && tool.startsWith("mcp__") ? "web" : "other");
+const CAT_COLOR = { search: "var(--c-search)", edit: "var(--c-edit)", shell: "var(--c-shell)", web: "var(--c-web)",
+  agent: "var(--c-agent)", wait: "var(--c-wait)", err: "var(--fail)", other: "#8a93a3" };
+const STATUS_TEXT = { pending: "시작 전", running: "실행 중", waiting: "승인 대기", done: "완료", failed: "실패" };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const state = { view: "office", mode: "demo", t: 0, playing: true, speed: 4, sel: "main", filter: null, total: 60 };
+let agents = [], byId = {}, order = [];
+
+/* ── 데모 데이터 → 모델 ─────────────────────── */
+function demoModel() {
+  return SCENARIO.map(a => {
+    let t = a.start; const evs = [];
+    for (const [tool, arg, dur, tok = 0] of a.events) {
+      if (tool !== "gap") evs.push({ tool, arg, t0: t, t1: t + dur, tok, cat: catOf(tool) });
+      t += dur + (tool === "gap" ? 0 : 0.35);
+    }
+    return { ...a, evs, end: t, failed: !!a.error };
+  });
+}
+
+/* ── 실시간 hook 이벤트 → 모델 ────────────────── */
+let rawEvents = [];
+const sessions = new Map(); // session_id → { first, last, prompt, cwd, ended }
+function indexSessions() {
+  sessions.clear();
+  for (const e of rawEvents) {
+    if (!e.session) continue;
+    let s = sessions.get(e.session);
+    if (!s) sessions.set(e.session, s = { id: e.session, first: e.ts, last: e.ts, prompt: "", cwd: e.cwd, ended: false });
+    s.last = e.ts;
+    if (e.event === "UserPromptSubmit" && !s.prompt) s.prompt = e.prompt;
+    if (e.event === "SessionEnd") s.ended = true;
+    if (e.event === "SessionStart") s.ended = false;
+  }
+}
+
+function liveModel(sid) {
+  const evs = rawEvents.filter(e => e.session === sid);
+  if (!evs.length) return [];
+  const t0 = evs[0].ts, sec = ts => (ts - t0) / 1000;
+  const main = { id: "main", parent: null, name: "메인 세션", type: "main", model: "", start: 0, end: null,
+    failed: false, prompt: "", result: "", evs: [] };
+  const list = [main], map = Object.create(null); map.main = main;
+  const pendingSpawn = [];           // Agent 도구 호출 대기열 (SubagentStart와 짝지음)
+  const byToolUse = {};              // tool_use_id → ev
+  const spawnToSub = {};             // Agent tool_use_id → 서브에이전트 id
+  const openWait = {};               // agentId → wait ev
+  const who = e => (e.agent && map[e.agent]) ? map[e.agent] : main;
+
+  for (const e of evs) {
+    const t = sec(e.ts), a = who(e);
+    if (openWait[a.id] && e.event !== "PermissionRequest") { openWait[a.id].t1 = t; delete openWait[a.id]; }
+    switch (e.event) {
+      case "SessionStart": if (e.model) main.model = e.model; break;
+      case "UserPromptSubmit":
+        if (!main.prompt) main.prompt = e.prompt;
+        main.end = null; break;
+      case "PreToolUse": {
+        const ev = { tool: e.tool, arg: e.arg, t0: t, t1: null, cat: catOf(e.tool), tok: 0 };
+        if (ev.cat === "agent") {
+          ev.t1 = t; ev.arg = `${e.spawn?.type || ""} · ${e.spawn?.description || ""}`;
+          pendingSpawn.push({ ...e.spawn, caller: a.id, toolUseId: e.toolUseId });
+        }
+        a.evs.push(ev);
+        if (e.toolUseId) byToolUse[e.toolUseId] = ev;
+        break;
+      }
+      case "PostToolUse":
+      case "PostToolUseFailure": {
+        const ev = byToolUse[e.toolUseId];
+        if (ev && ev.cat !== "agent") ev.t1 = t;
+        if (e.event === "PostToolUseFailure") {
+          if (ev) { ev.cat = "err"; ev.error = e.error; }
+          const sub = map[spawnToSub[e.toolUseId]];
+          if (sub && sub.end == null) { sub.end = t; sub.failed = true; sub.error = e.error; }
+          // 서브에이전트가 뜨기 전에 실패한 Agent 호출은 대기열에서 뺀다
+          const pi = pendingSpawn.findIndex(x => x.toolUseId && x.toolUseId === e.toolUseId);
+          if (pi >= 0) pendingSpawn.splice(pi, 1);
+        } else {
+          const sub = map[spawnToSub[e.toolUseId]];
+          if (sub && sub.end == null) sub.end = t;
+        }
+        break;
+      }
+      case "PermissionRequest": {
+        const w = { tool: "permission", arg: `${e.tool}: ${e.arg}`, t0: t, t1: null, cat: "wait", tok: 0 };
+        a.evs.push(w); openWait[a.id] = w; break;
+      }
+      case "SubagentStart": {
+        let i = pendingSpawn.findIndex(p => p.type === e.agentType);
+        if (i < 0) i = 0;
+        const sp = pendingSpawn.splice(i, 1)[0] || {};
+        const sub = { id: e.agent, parent: sp.caller || "main", name: sp.description || e.agentType || "서브에이전트",
+          type: e.agentType || sp.type || "agent", model: sp.model || e.model || "", start: t, end: null, failed: false,
+          prompt: sp.prompt || "", result: "", evs: [] };
+        if (sp.toolUseId) spawnToSub[sp.toolUseId] = sub.id;
+        list.push(sub); map[sub.id] = sub; break;
+      }
+      case "SubagentStop": {
+        const sub = map[e.agent];
+        if (sub) { sub.end = t; sub.result = e.result || sub.result; }
+        break;
+      }
+      case "Stop": main.end = t; main.result = e.result || main.result; break;
+      case "SessionEnd":
+        for (const x of list) if (x.end == null) {
+          x.end = t;
+          if (x !== main) { x.failed = true; x.error = "세션이 끝나 중단되었습니다."; }
+        }
+        for (const x of list) for (const ev of x.evs) if (ev.t1 == null) ev.t1 = t;
+        break;
+    }
+  }
+  const s = sessions.get(sid);
+  main.name = s?.prompt ? s.prompt.slice(0, 40) + (s.prompt.length > 40 ? "…" : "") : "메인 세션";
+  return list;
+}
+
+/* ── 트리 순서 ────────────────────────────── */
+function setModel(list) {
+  agents = list;
+  byId = Object.assign(Object.create(null), Object.fromEntries(agents.map(a => [a.id, a])));
+  order = [];
+  (function walk(pid, depth) {
+    agents.filter(a => a.parent === pid).sort((x, y) => x.start - y.start)
+      .forEach(a => { a.depth = depth; order.push(a); walk(a.id, depth + 1); });
+  })(null, 0);
+  order.forEach((a, i) => a.idx = i);
+  if (!byId[state.sel]) state.sel = "main";
+}
+
+/* ── 상태 계산 ────────────────────────────── */
+const endOf = a => a.end == null ? Infinity : a.end;
+function statusAt(a, t) {
+  if (t < a.start) return "pending";
+  if (t >= endOf(a)) return a.failed ? "failed" : "done";
+  if (a.evs.some(e => e.cat === "wait" && t >= e.t0 && t < (e.t1 ?? Infinity))) return "waiting";
+  return "running";
+}
+const fmt = s => {
+  s = Math.max(0, Math.floor(s));
+  const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = String(s % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
+};
+const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1) + "k" : String(n);
+const pct = t => (t / state.total) * 100 + "%";
+const STEPS = [10, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200];
+
+/* ── DOM ─────────────────────────────────── */
+const $ = s => document.querySelector(s);
+const rowsEl = $("#rows"), linksEl = $("#links"), ticksEl = $("#ticks"), detailEl = $("#detail"), tip = $("#tip");
+const TREE_SVG = `<svg class="tree-mark" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 0v6.5h9"/></svg>`;
+const now = document.createElement("div"); now.className = "now"; now.innerHTML = "<span></span>";
+let structureKey = "", tickKey = "";
+
+function buildRows() {
+  rowsEl.innerHTML = ""; linksEl.innerHTML = ""; linksEl.appendChild(now);
+  for (const a of order) {
+    const row = document.createElement("div");
+    row.className = "row"; row.tabIndex = 0; row.setAttribute("role", "option"); row.dataset.id = a.id;
+    row.style.setProperty("--depth", a.depth);
+    row.innerHTML = `
+      <div class="label">${a.depth ? TREE_SVG : ""}<span class="dot"></span>
+        <span class="txt"><span class="name" title="${esc(a.name)}">${esc(a.name)}</span><span class="meta">${esc(a.type)}${a.model ? " · " + esc(a.model) : ""} · <span class="st"></span></span></span>
+      </div>
+      <div class="track"><div class="life"></div><div class="end-mark"></div></div>`;
+    a.el = { row, track: row.querySelector(".track"), life: row.querySelector(".life"), st: row.querySelector(".st"), end: row.querySelector(".end-mark") };
+    row.addEventListener("click", () => select(a.id));
+    row.addEventListener("keydown", ev => {
+      if (ev.key !== "ArrowDown" && ev.key !== "ArrowUp") return;
+      ev.preventDefault();
+      const n = order[a.idx + (ev.key === "ArrowDown" ? 1 : -1)];
+      if (n) { select(n.id); n.el.row.focus(); }
+    });
+    rowsEl.appendChild(row);
+    if (a.parent && byId[a.parent]) {
+      const p = byId[a.parent], l = document.createElement("div");
+      l.className = "link";
+      l.style.top = `calc(${p.idx} * var(--row) + var(--row) / 2 + 11px + 30px)`;
+      l.style.height = `calc(${a.idx - p.idx} * var(--row) - var(--row) / 2 - 11px + 12px)`;
+      linksEl.appendChild(l); a.el.link = l;
+    }
+  }
+  const empty = state.mode !== "demo" && order.length === 0;
+  if (empty) rowsEl.innerHTML = `<div class="no-data"><strong>아직 받은 이벤트가 없습니다</strong>
+    office-monitor 플러그인을 설치한 상태에서 Claude Code 세션을 열면 hook이 이벤트를 보내고, 여기에 바로 나타납니다.</div>`;
+}
+
+function evEl(a, e) {
+  if (e.el) return e.el;
+  const b = document.createElement("div");
+  b.className = "ev " + e.cat;
+  b.addEventListener("mouseenter", ev => showTip(ev, a, e));
+  b.addEventListener("mousemove", moveTip);
+  b.addEventListener("mouseleave", hideTip);
+  a.el.track.insertBefore(b, a.el.end);
+  return e.el = b;
+}
+
+function buildTicks() {
+  const step = STEPS.find(s => state.total / s <= 8) || 7200;
+  const key = `${step}|${Math.floor(state.total / step)}`;
+  if (key === tickKey) { for (const d of ticksEl.children) d.style.left = pct(+d.dataset.s); return; }
+  tickKey = key; ticksEl.innerHTML = "";
+  for (let s = 0; s <= state.total - step * 0.4; s += step) {
+    const d = document.createElement("div"); d.className = "tick"; d.dataset.s = s; d.style.left = pct(s); d.textContent = fmt(s);
+    ticksEl.appendChild(d);
+  }
+}
+
+/* ── 툴팁 ────────────────────────────────── */
+function showTip(ev, a, e) {
+  const dur = Math.min(state.t, e.t1 ?? state.t) - e.t0;
+  const label = e.cat === "wait" ? "권한 승인 대기" : e.cat === "err" ? (e.tool === "error" ? "오류" : `${e.tool} 실패`) : e.tool;
+  tip.innerHTML = `<b>${esc(label)}</b> · ${esc(a.name)}<em>${esc(e.error || e.arg)}</em>${fmt(e.t0)} 시작 · ${dur.toFixed(1)}초${e.tok ? ` · ${fmtK(e.tok)} 토큰` : ""}`;
+  tip.classList.add("on"); moveTip(ev);
+}
+function moveTip(ev) {
+  const r = tip.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY + 16;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 12;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { tip.classList.remove("on"); }
+
+/* ── 상세 패널 ───────────────────────────── */
+let lastDetailKey = "";
+function renderDetail() {
+  const a = byId[state.sel];
+  if (!a) { detailEl.innerHTML = `<div class="d-body"><div class="empty"><strong>선택한 에이전트가 없습니다</strong>왼쪽 목록에서 에이전트를 고르세요.</div></div>`; lastDetailKey = ""; return; }
+  const t = state.t, st = statusAt(a, t);
+  const seen = a.evs.filter(e => e.t0 <= t);
+  const tok = seen.reduce((s, e) => s + ((e.t1 ?? t) <= t ? e.tok : e.tok * (t - e.t0) / ((e.t1 ?? t) - e.t0 || 1)), 0);
+  const elapsed = st === "pending" ? 0 : Math.min(t, endOf(a)) - a.start;
+  const calls = seen.filter(e => e.cat !== "wait").length;
+  const errs = seen.filter(e => e.cat === "err").length;
+  const third = state.mode === "demo" ? `<div><dt>토큰</dt><dd>${fmtK(Math.round(tok))}</dd></div>` : `<div><dt>오류</dt><dd>${errs}</dd></div>`;
+  const factsHtml = `<div><dt>경과</dt><dd>${fmt(elapsed)}</dd></div><div><dt>도구 호출</dt><dd>${calls}</dd></div>${third}`;
+  const openCount = seen.filter(e => e.t1 == null || e.t1 > t).length;
+  const key = `${a.id}|${st}|${seen.length}|${openCount}`;
+  if (key === lastDetailKey) { const f = detailEl.querySelector(".facts"); if (f) f.innerHTML = factsHtml; return; }
+  const fresh = key.split("|")[0] === lastDetailKey.split("|")[0];
+  lastDetailKey = key;
+
+  let outcome = "";
+  if (st === "done" && a.result) outcome = `<div class="result"><strong>결과</strong>${esc(a.result)}</div>`;
+  if (st === "failed") outcome = `<div class="result fail"><strong>실패 사유</strong>${esc(a.error || "알 수 없음")}</div>`;
+  if (st === "waiting") {
+    const w = a.evs.find(e => e.cat === "wait" && t >= e.t0 && t < (e.t1 ?? Infinity));
+    outcome = `<div class="result waiting"><strong>사용자 승인을 기다리는 중</strong><span style="font-family:var(--mono);font-size:12px">${esc(w.arg)}</span></div>`;
+  }
+  const children = agents.filter(c => c.parent === a.id && c.start <= t);
+  const log = seen.slice().reverse().slice(0, 300).map((e, i) => {
+    const live = e.t1 == null || e.t1 > t;
+    const name = e.cat === "wait" ? "승인 대기" : e.cat === "err" ? (e.tool === "error" ? "오류" : `${e.tool} 실패`) : e.tool;
+    return `<li class="${fresh && i === 0 ? "fresh" : ""}"><time>${fmt(e.t0)}</time><i class="k" style="background:${CAT_COLOR[e.cat]}"></i>
+      <div><span class="tool">${esc(name)}</span> ${live ? '<span class="live">진행 중</span>' : ""}<div class="arg">${esc(e.error || e.arg)}</div></div></li>`;
+  }).join("");
+
+  detailEl.innerHTML = `
+    <div class="d-head">
+      <span class="d-status st-${st}"><span class="dot"></span>${STATUS_TEXT[st]}</span>
+      <h2>${esc(a.name)}</h2>
+      <div class="sub">${esc(a.type)}${a.model ? " · " + esc(a.model) : ""}${a.parent && byId[a.parent] ? ` · 상위: ${esc(byId[a.parent].name)}` : ""}</div>
+      <dl class="facts">${factsHtml}</dl>
+    </div>
+    <div class="d-body">
+      ${outcome}
+      ${a.prompt ? `<h3>지시 내용</h3><p class="prompt">${esc(a.prompt)}</p>` : ""}
+      ${children.length ? `<h3>호출한 서브에이전트 ${children.length}</h3><p class="prompt" style="font-size:12.5px">${children.map(c => `${esc(c.name)} — ${STATUS_TEXT[statusAt(c, t)]}`).join("<br>")}</p>` : ""}
+      <h3>도구 호출 기록</h3>
+      ${seen.length ? `<ol class="log">${log}</ol>`
+        : `<div class="empty"><strong>아직 도구를 호출하지 않았습니다</strong>${state.mode === "demo" ? `${fmt(a.start)}에 시작합니다.` : "이벤트가 오면 여기에 쌓입니다."}</div>`}
+    </div>`;
+}
+
+/* ── 프레임 갱신 ─────────────────────────── */
+function render() {
+  const key = order.map(a => a.id + ":" + (a.parent || "")).join(",") + "|" + state.mode;
+  if (key !== structureKey) { structureKey = key; buildRows(); }
+  buildTicks();
+  const t = state.t, counts = { running: 0, waiting: 0, done: 0, failed: 0 };
+  for (const a of order) {
+    const st = statusAt(a, t);
+    if (a.id !== "main" && counts[st] !== undefined) counts[st]++;
+    const r = a.el.row;
+    r.className = `row st-${st}` + (st === "pending" ? " pending" : "") +
+      (state.filter && st !== state.filter && st !== "pending" ? " dim" : "");
+    r.setAttribute("aria-selected", a.id === state.sel);
+    a.el.st.textContent = STATUS_TEXT[st];
+    const visEnd = Math.min(t, endOf(a));
+    a.el.life.style.display = st === "pending" ? "none" : "";
+    a.el.life.style.left = pct(a.start);
+    a.el.life.style.width = pct(Math.max(0, visEnd - a.start));
+    a.el.end.style.display = t >= endOf(a) ? "" : "none";
+    a.el.end.style.left = pct(Math.min(endOf(a), state.total));
+    for (const e of a.evs) {
+      const el = evEl(a, e);
+      if (t < e.t0) { el.style.display = "none"; continue; }
+      el.style.display = ""; el.className = "ev " + e.cat;
+      el.style.left = pct(e.t0);
+      if (e.cat !== "agent") el.style.width = pct(Math.min(t, e.t1 ?? t) - e.t0);
+    }
+    if (a.el.link) { a.el.link.style.display = t >= a.start ? "" : "none"; a.el.link.style.left = pct(a.start); }
+  }
+  for (const k in counts) document.getElementById("n-" + k).textContent = counts[k];
+  $("#clock").textContent = fmt(t);
+  now.style.left = pct(t); now.firstChild.textContent = fmt(t);
+  now.style.display = (state.mode === "demo" && t >= state.total) || !order.length ? "none" : "";
+  renderDetail();
+}
+function select(id) { state.sel = id; lastDetailKey = ""; render(); }
+
+/* ── 데모 컨트롤 ─────────────────────────── */
+const ICON_PAUSE = `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="3.5" y="2.5" width="3" height="11" rx="1"/><rect x="9.5" y="2.5" width="3" height="11" rx="1"/></svg>`;
+const ICON_PLAY = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.8v10.4a.6.6 0 0 0 .9.5l8.2-5.2a.6.6 0 0 0 0-1L5.4 2.3a.6.6 0 0 0-.9.5z"/></svg>`;
+function syncPlay() {
+  $("#play").innerHTML = state.playing ? ICON_PAUSE : ICON_PLAY;
+  $("#play").setAttribute("aria-label", state.playing ? "일시정지" : "재생");
+}
+$("#play").onclick = () => { if (state.t >= state.total) state.t = 0; state.playing = !state.playing; syncPlay(); };
+$("#restart").onclick = () => { state.t = 0; state.playing = true; syncPlay(); lastDetailKey = ""; render(); };
+document.querySelectorAll("[data-speed]").forEach(b => b.onclick = () => {
+  state.speed = +b.dataset.speed;
+  document.querySelectorAll("[data-speed]").forEach(x => x.setAttribute("aria-pressed", x === b));
+});
+document.querySelectorAll("[data-filter]").forEach(b => b.onclick = () => {
+  state.filter = state.filter === b.dataset.filter ? null : b.dataset.filter;
+  document.querySelectorAll("[data-filter]").forEach(x => x.setAttribute("aria-pressed", x.dataset.filter === state.filter));
+  render();
+});
+document.addEventListener("keydown", e => {
+  if (e.key === " " && e.target === document.body && state.mode === "demo") { e.preventDefault(); $("#play").click(); }
+});
+
+/* ── 실시간 모드 ─────────────────────────── */
+let liveSid = null, followLatest = true, dirty = true;
+const sel = $("#session-select");
+sel.onchange = () => { liveSid = sel.value; followLatest = sel.selectedIndex === 0; state.sel = "main"; dirty = true; };
+
+function refreshSessionList() {
+  const list = [...sessions.values()].sort((a, b) => b.last - a.last);
+  const want = q.get("session");
+  if (want && followLatest) { const m = list.find(s => s.id.startsWith(want)); if (m) { liveSid = m.id; followLatest = false; } }
+  if (followLatest && list[0]) liveSid = list[0].id;
+  const html = list.map(s => {
+    const when = new Date(s.first).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+    const label = `${when} · ${String(s.prompt || "(프롬프트 없음)").slice(0, 34)}${s.ended ? " · 종료" : ""}`;
+    return `<option value="${esc(s.id)}"${s.id === liveSid ? " selected" : ""}>${esc(label)}</option>`;
+  }).join("");
+  if (sel.innerHTML !== html) sel.innerHTML = html;
+}
+
+function liveRebuild() {
+  indexSessions(); refreshSessionList();
+  const s = sessions.get(liveSid);
+  setModel(liveSid ? liveModel(liveSid) : []);
+  if (s) {
+    $("#title").textContent = s.prompt ? s.prompt.slice(0, 60) : "Claude Code 세션";
+    $("#subtitle").textContent = `세션 ${s.id.slice(0, 8)} · ${s.cwd || ""}`;
+  }
+  dirty = false;
+}
+
+function setTag(kind) {
+  const tag = $("#mode-tag");
+  tag.className = "demo-tag " + kind;
+  tag.textContent = kind === "live" ? "실시간 연결됨" : "연결 끊김 · 재시도 중";
+}
+
+function startLive() {
+  state.mode = "live"; state.playing = false;
+  $("#demo-controls").hidden = true; $("#live-controls").hidden = false;
+  $("#title").textContent = "Claude Code 세션"; $("#subtitle").textContent = "hook 이벤트 대기 중";
+  setModel([]); render();
+  if (q.get("snapshot") === "1") {   // 화면 캡처·디버그용: 한 번만 받아서 그린다
+    fetch("/events").then(r => r.json()).then(list => { rawEvents = list; setTag("live"); liveTick(); });
+    return;
+  }
+  const es = new EventSource("/events/stream");
+  es.addEventListener("history", m => { rawEvents = JSON.parse(m.data); dirty = true; setTag("live"); });
+  es.onmessage = m => {
+    const e = JSON.parse(m.data);
+    if (e.event === "__clear") rawEvents = []; else rawEvents.push(e);
+    dirty = true;
+  };
+  es.onerror = () => setTag("off");
+  es.onopen = () => setTag("live");
+  setInterval(liveTick, 300);
+}
+
+/* ── 루프 ────────────────────────────────── */
+let last = performance.now();
+function frame(ts) {
+  const dt = Math.min(0.1, (ts - last) / 1000); last = ts;
+  if (state.mode === "demo") {
+    if (state.playing) {
+      state.t = Math.min(state.total, state.t + dt * state.speed);
+      if (state.t >= state.total) { state.playing = false; syncPlay(); }
+      render();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+// 실시간 모드는 rAF가 멈추는 백그라운드 탭에서도 갱신되도록 타이머로 돈다
+function liveTick() {
+  if (dirty) liveRebuild();
+  const s = sessions.get(liveSid);
+  const endTs = s && s.ended ? s.last : Date.now();
+  state.t = s ? (endTs - s.first) / 1000 : 0;
+  state.total = Math.max(60, state.t * 1.06 + 5);
+  render();
+}
+
+
+/* ── 오피스 뷰: 사무실 ───────────────────────────
+   왼쪽 사장실에 사장(메인 세션)이 있고, 오른쪽에 에이전트 유형별 개인 방(3×2)이 있다.
+   평소에는 직원이 자기 방 책상에서 쉬고(월급루팡), 사장이 일감을 주면(Agent 호출)
+   복도를 지나 사장실로 가서 일을 받고, 자기 자리로 돌아와 일한다.
+   끝나면 사장에게 보고하러 갔다가 자리로 돌아온다. 같은 유형이 동시에 여러 개면 옆자리에 추가 인원이 앉는다. */
+const SVGNS = "http://www.w3.org/2000/svg";
+const VB_W = 1200, VB_H = 520;
+const BOSS_ROOM = { x: 16, y: 16, w: 300, h: 488 };
+const BOSS = { x: 166, y: 236 };              // 사장 자리(책상 뒤)
+const RECEIVE = { x: 166, y: 352 };           // 사장 책상 앞
+const BOSS_DOOR_X = BOSS_ROOM.x + BOSS_ROOM.w;
+const CORR = 260;                              // 복도 가운데 높이
+const ROOM_X0 = 340, ROOM_W = 275, ROOM_GAP = 8, ROOM_H = 220;
+const ROW_Y = [16, 284];
+const SEAT_DX = [117, 53, 181];                // 방 안 자리(가운데 → 왼쪽 → 오른쪽)
+const DOOR_DX = 236;
+const PAUSE_MS = 700;
+const FAIL_STAY_S = 10;
+const DEFAULT_TYPES = ["Explore", "general-purpose", "Plan", "code-reviewer", "web-fetch"];
+const SHORT_TYPE = { "general-purpose": "범용", "code-reviewer": "리뷰어", "web-fetch": "웹", Explore: "탐색", Plan: "설계" };
+const shortType = t => SHORT_TYPE[t] || (t.length > 8 ? t.slice(0, 7) + "…" : t);
+const TYPE_COLOR = { main: "#2a3344", Explore: "#4f74a8", "general-purpose": "#23866a", Plan: "#7656ad",
+  "code-reviewer": "#a87719", "web-fetch": "#2b8a9a" };
+const typeColor = t => TYPE_COLOR[t] || "#6b7380";
+const ROLE_DESC = {
+  main: "사용자의 요청을 받아 직접 처리하거나, 일을 나눠 직원(서브에이전트)에게 맡기고 결과를 모읍니다.",
+  Explore: "코드베이스를 넓게 훑어 파일과 코드 위치를 찾아오는 읽기 전용 탐색 담당입니다.",
+  "general-purpose": "조사, 코드 수정, 여러 단계에 걸친 작업을 두루 맡는 범용 담당입니다.",
+  Plan: "구현 계획과 설계를 세우는 읽기 전용 설계 담당입니다.",
+  "web-fetch": "웹 페이지를 읽고 필요한 내용을 정리해 오는 담당입니다.",
+  "statusline-setup": "Claude Code 상태 표시줄 설정을 맡는 담당입니다.",
+  claude: "특정 역할 없이 일반 작업을 맡는 담당입니다.",
+  "code-reviewer": "변경분을 검토하는 리뷰 담당입니다.",
+};
+const roleOf = t => ROLE_DESC[t] || "역할 설명이 없는 사용자 정의 에이전트입니다. ~/.claude/agents에 정의하면 설명이 표시됩니다.";
+if (location.protocol.startsWith("http")) {
+  fetch("/roles").then(r => r.ok ? r.json() : {}).then(m => Object.assign(ROLE_DESC, m)).catch(() => {});
+}
+const roomRect = i => ({ x: ROOM_X0 + (i % 3) * (ROOM_W + ROOM_GAP), y: ROW_Y[Math.floor(i / 3)], w: ROOM_W, h: ROOM_H, row: Math.floor(i / 3) });
+const seatPos = (i, k) => { const r = roomRect(i); return { x: r.x + SEAT_DX[k % 3], y: r.row === 0 ? r.y + 186 : r.y + 192 }; };
+const doorX = i => roomRect(i).x + DOOR_DX;
+
+// 작업 종류별 말투와 아이콘
+const WORK_PHRASE = { search: "자료 뒤지는 중", edit: "코드 고치는 중", shell: "터미널 두드리는 중", web: "인터넷 서핑(업무) 중",
+  other: "작업 중", think: "머리 굴리는 중", wait: "결재 기다리는 중", err: "멘붕 중" };
+const GLYPH = {
+  search: `<circle cx="-2" cy="-2" r="5" fill="none" stroke="#fff" stroke-width="2"/><path d="M2 2l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`,
+  edit: `<path d="M-5 5l1-4 7-7 3 3-7 7z" fill="#fff"/>`,
+  shell: `<path d="M-6 -4l4 4-4 4M0 5h6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+  web: `<circle r="6" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M-6 0h12M0 -6c3 3 3 9 0 12M0 -6c-3 3-3 9 0 12" stroke="#fff" stroke-width="1.4" fill="none"/>`,
+  other: `<circle cx="-4" r="1.6" fill="#fff"/><circle r="1.6" fill="#fff"/><circle cx="4" r="1.6" fill="#fff"/>`,
+  think: `<circle cx="-4" r="1.6" fill="#fff"/><circle r="1.6" fill="#fff"/><circle cx="4" r="1.6" fill="#fff"/>`,
+  wait: `<path d="M0 -6v7" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cy="5" r="1.5" fill="#fff"/>`,
+  err: `<path d="M-4 -4l8 8M4 -4l-8 8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`,
+};
+
+function roomSvg(i) {
+  const r = roomRect(i), top = r.row === 0;
+  const dx = r.x + DOOR_DX;
+  return `<g class="room vacant" id="room-${i}" data-room="${i}">
+    <rect class="room-box" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="14"/>
+    <rect class="room-rug" x="${r.x + 22}" y="${top ? r.y + 150 : r.y + 156}" width="${r.w - 74}" height="58" rx="10"/>
+    <rect class="room-door" x="${dx - 22}" y="${top ? r.y + r.h - 3 : r.y - 3}" width="44" height="6" rx="2"/>
+    <circle class="room-lamp" cx="${r.x + r.w - 20}" cy="${r.y + 22}" r="5"/>
+    <text class="plate-name" id="room-name-${i}" x="${r.x + 18}" y="${r.y + 30}"></text>
+    <text class="plate-no" id="room-role-${i}" x="${r.x + 18}" y="${r.y + 49}"></text>
+    <g class="room-status" transform="translate(${r.x + 18} ${r.y + 74})">
+      <g id="room-icon-${i}" transform="translate(7 -4)"></g>
+      <text id="room-status-${i}" x="20" y="0"></text>
+    </g>
+    <g class="furniture">
+      <rect x="${r.x + r.w - 40}" y="${r.y + 96}" width="22" height="30" rx="4" fill="#e9ecf1"/>
+      <circle cx="${r.x + r.w - 29}" cy="${r.y + 92}" r="10" fill="#9cc7a4"/><circle cx="${r.x + r.w - 35}" cy="${r.y + 86}" r="7" fill="#b7d8bd"/>
+    </g>
+  </g>`;
+}
+// 책상은 사람 앞에 그린다(앉아 있는 것처럼 보이게)
+function deskSvg(i) {
+  const r = roomRect(i), y = seatPos(i, 0).y - 22;
+  return `<g class="desk">
+    <rect x="${r.x + 26}" y="${y}" width="${r.w - 82}" height="11" rx="4" fill="#c9a77f"/>
+    <rect x="${r.x + 32}" y="${y + 11}" width="${r.w - 94}" height="20" rx="3" fill="#b89470"/>
+    ${[0, 1, 2].map(k => { const sx = r.x + SEAT_DX[k]; return `<g class="laptop" id="laptop-${i}-${k}"><rect x="${sx - 13}" y="${y - 13}" width="26" height="14" rx="2" class="room-screen"/><rect x="${sx - 16}" y="${y - 1}" width="32" height="3" rx="1.5" fill="#8a93a3"/></g>`; }).join("")}
+  </g>`;
+}
+
+const SCENE = `
+<rect width="${VB_W}" height="${VB_H}" fill="#eef0f3"/>
+<!-- 복도 -->
+<rect x="${BOSS_DOOR_X - 6}" y="${CORR - 24}" width="${VB_W - BOSS_DOOR_X - 10}" height="48" rx="10" fill="#e2e6ec"/>
+<path d="M${BOSS_DOOR_X + 20} ${CORR}H${VB_W - 30}" stroke="#d3d9e1" stroke-width="2" stroke-dasharray="8 10"/>
+<!-- 사장실 -->
+<rect x="${BOSS_ROOM.x}" y="${BOSS_ROOM.y}" width="${BOSS_ROOM.w}" height="${BOSS_ROOM.h}" rx="16" fill="#fbf8f2" stroke="#e6dfd2" stroke-width="1.5"/>
+<rect x="${BOSS_DOOR_X - 3}" y="${CORR - 22}" width="6" height="44" fill="#e2e6ec"/>
+<text x="40" y="56" class="agency-sign">사장실</text>
+<g><circle cx="276" cy="50" r="16" fill="#fff" stroke="#d6cfc2" stroke-width="2"/>
+  <line id="clock-m" x1="276" y1="50" x2="276" y2="40" stroke="#2a3344" stroke-width="2.4" stroke-linecap="round"/>
+  <line id="clock-s" x1="276" y1="50" x2="276" y2="38" stroke="#c23b32" stroke-width="1.2" stroke-linecap="round"/>
+  <text x="250" y="54" text-anchor="end" class="clock-label" id="office-clock">0:00</text></g>
+<rect x="${BOSS.x - 76}" y="${RECEIVE.y - 18}" width="152" height="40" rx="12" fill="#f3ede2"/>
+<g transform="translate(46 430)"><rect x="-14" y="10" width="28" height="36" rx="5" fill="#e6dfd2"/><circle r="17" fill="#9cc7a4"/><circle cx="-9" cy="-9" r="11" fill="#b7d8bd"/></g>
+${[...Array(6)].map((_, i) => roomSvg(i)).join("")}
+<g id="crew"></g>
+<g id="front" pointer-events="none">
+  <g class="boss-desk">
+    <rect x="${BOSS.x - 58}" y="${BOSS.y - 22}" width="116" height="12" rx="4" fill="#8b6a4b"/>
+    <rect x="${BOSS.x - 52}" y="${BOSS.y - 10}" width="104" height="30" rx="3" fill="#7a5b3f"/>
+    <rect x="${BOSS.x - 40}" y="${BOSS.y - 36}" width="30" height="15" rx="2" fill="#2a3344"/>
+    <rect x="${BOSS.x + 14}" y="${BOSS.y - 30}" width="26" height="9" rx="1.5" fill="#fffdf8"/>
+    <text x="${BOSS.x}" y="${BOSS.y + 10}" text-anchor="middle" class="desk-plaque">사장</text>
+  </g>
+  ${[...Array(6)].map((_, i) => deskSvg(i)).join("")}
+</g>
+<g id="crew-top"></g>
+<g id="boss-chip" transform="translate(${BOSS.x} 122)"><rect class="chip-bg" x="-80" y="-15" width="160" height="28" rx="14"/><text class="chip-text" text-anchor="middle" y="4"></text></g>`;
+
+const office = { built: false, figs: {}, instFig: {}, closed: new Set(), last: performance.now(), lastT: 0, roomKey: [], pop: null, popKey: "" };
+
+function buildOffice() {
+  document.getElementById("office-svg").innerHTML = SCENE;
+  Object.assign(office, { built: true, figs: {}, instFig: {}, roomKey: [] });
+  document.querySelectorAll("#office-svg .room").forEach(el => el.addEventListener("click", e => {
+    e.stopPropagation();
+    const ty = office.roomTypes?.[+el.dataset.room];
+    if (ty) openPop("room", ty);
+  }));
+}
+
+function makeFigure(key, color, isMain, onPick) {
+  const g = document.createElementNS(SVGNS, "g");
+  g.setAttribute("class", "worker");
+  g.setAttribute("tabindex", "0");
+  g.setAttribute("role", "button");
+  g.innerHTML = `
+    <ellipse class="shadow" cx="0" cy="1" rx="15" ry="3.5"/>
+    <g class="fig"><g class="bobber">
+      <g class="legs"><rect class="leg l" x="-7" y="-20" width="6" height="20" rx="3"/><rect class="leg r" x="1" y="-20" width="6" height="20" rx="3"/></g>
+      <rect class="body" x="-13" y="-50" width="26" height="33" rx="12" fill="${color}"/>
+      ${isMain ? `<path d="M0 -48 l3.5 5 -3.5 14 -3.5 -14z" fill="#e8eef9"/>` : `<rect x="-6" y="-48" width="12" height="5" rx="2.5" fill="#fff" opacity=".85"/>`}
+      <g class="arm"><rect x="9" y="-46" width="6" height="20" rx="3" fill="${color}"/></g>
+      <g class="head-g">
+        <circle class="head" cx="0" cy="-62" r="13"/>
+        <path class="hair" d="M-13 -64 a13 13 0 0 1 26 0 q-6 -5 -13 -4 q-7 -1 -13 4z"/>
+        <circle class="eye" cx="-4.5" cy="-61" r="1.7"/><circle class="eye" cx="4.5" cy="-61" r="1.7"/>
+        <circle class="cheek" cx="-8" cy="-56.5" r="2.4"/><circle class="cheek" cx="8" cy="-56.5" r="2.4"/>
+        <path class="mouth" d="M-2.5 -55.5 q2.5 2 5 0"/>
+      </g>
+      <rect class="paper" x="12" y="-38" width="12" height="16" rx="1.5"/>
+    </g></g>
+    <g class="zz"><text x="12" y="-78">z</text><text class="z2" x="20" y="-88">z</text></g>
+    <g class="mark" transform="translate(0 -90)"><circle r="9"/><g class="mark-glyph"></g></g>
+    <text class="name" y="17" text-anchor="middle"></text>
+    <rect class="ring" x="-22" y="-82" width="44" height="106" rx="12"/>`;
+  const pick = e => { e.stopPropagation(); onPick(); };
+  g.addEventListener("click", pick);
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(e); } });
+  document.getElementById("crew").appendChild(g);
+  return { g, x: 0, y: 0, flip: 1, mark: undefined, label: undefined, cls: "" };
+}
+
+const shortArg = (s, n = 16) => { s = String(s || "").split("/").pop(); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
+
+// 지금 하는 일 (카드, 방 상태줄, 사장 말풍선이 함께 쓴다)
+function currentWork(a, t) {
+  const st = statusAt(a, t);
+  const open = a.evs.filter(e => e.t0 <= t && (e.t1 == null || e.t1 > t) && e.cat !== "agent" && e.cat !== "wait").pop();
+  const wait = a.evs.find(e => e.cat === "wait" && t >= e.t0 && t < (e.t1 ?? Infinity));
+  const lastEv = a.evs.filter(e => e.t0 <= t && e.cat !== "agent" && e.cat !== "wait" && e.tool !== "error").pop();
+  if (st === "waiting" && wait) return { st, cat: "wait", title: "권한 승인을 기다리는 중", detail: wait.arg };
+  if (st === "failed") return { st, cat: "err", title: "실패", detail: a.error || "" };
+  if (st === "done") return { st, cat: null, title: "완료", detail: a.result || "" };
+  if (open) return { st, cat: open.cat, title: `${open.tool} 실행 중`, detail: open.arg, since: t - open.t0, tool: open.tool };
+  return { st, cat: "think", title: "다음 할 일을 생각하는 중", detail: lastEv ? `직전 작업: ${lastEv.tool} · ${lastEv.arg}` : "" };
+}
+
+/* ── 이동: 경유점 목록을 따라 걷는다 ───────────── */
+const where = p => {
+  if (p.x <= BOSS_DOOR_X - 4) return { kind: "boss" };
+  if (Math.abs(p.y - CORR) <= 24) return { kind: "corr" };
+  for (let i = 0; i < 6; i++) { const r = roomRect(i); if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) return { kind: "room", i }; }
+  return { kind: "corr" };
+};
+function planPath(from, to) {
+  const a = where(from), b = where(to), pts = [];
+  if (a.kind === "room" && b.kind === "room" && a.i === b.i) return [to];
+  if (a.kind === "boss" && b.kind === "boss") return [to];
+  if (a.kind === "room") pts.push({ x: doorX(a.i), y: from.y }, { x: doorX(a.i), y: CORR });
+  if (a.kind === "boss") pts.push({ x: BOSS_DOOR_X - 20, y: CORR }, { x: BOSS_DOOR_X + 20, y: CORR });
+  if (a.kind === "corr") pts.push({ x: from.x, y: CORR });
+  if (b.kind === "room") pts.push({ x: doorX(b.i), y: CORR }, { x: doorX(b.i), y: to.y }, to);
+  else if (b.kind === "boss") pts.push({ x: BOSS_DOOR_X + 20, y: CORR }, { x: BOSS_DOOR_X - 20, y: CORR }, to);
+  else pts.push(to);
+  return pts;
+}
+function walk(f, to, dist) {
+  const key = `${Math.round(to.x)},${Math.round(to.y)}`;
+  if (f.pathKey !== key) { f.pathKey = key; f.path = planPath(f, to); }
+  let left = dist;
+  while (f.path.length && left > 0) {
+    const p = f.path[0], dx = p.x - f.x, dy = p.y - f.y, d = Math.hypot(dx, dy);
+    if (Math.abs(dx) > 1) f.flip = dx < 0 ? -1 : 1;
+    if (d <= left) { f.x = p.x; f.y = p.y; left -= d; f.path.shift(); }
+    else { f.x += dx / d * left; f.y += dy / d * left; left = 0; }
+  }
+  return f.path.length === 0;
+}
+function snap(f, to) { f.x = to.x; f.y = to.y; f.path = []; f.pathKey = `${Math.round(to.x)},${Math.round(to.y)}`; }
+
+function setMark(f, mark) {
+  if (f.mark === mark) return;
+  f.mark = mark;
+  const m = f.g.querySelector(".mark");
+  m.style.display = mark ? "inline" : "none";
+  if (mark) {
+    m.querySelector("circle").setAttribute("fill", CAT_COLOR[mark] || "#8a93a3");
+    m.querySelector(".mark-glyph").innerHTML = GLYPH[mark] || "";
+  }
+}
+function setLabel(f, label, aria) {
+  if (f.label !== label) { f.label = label; f.g.querySelector(".name").textContent = label; }
+  f.g.setAttribute("aria-label", aria);
+}
+function place(f, cls, onTop = false) {
+  if (f.cls !== cls) { f.g.setAttribute("class", cls); f.cls = cls; }
+  // 자리에 앉아 있을 때만 책상 뒤에, 걷거나 서 있을 때는 책상·가구보다 앞에 그린다
+  const layer = document.getElementById(onTop ? "crew-top" : "crew");
+  if (f.g.parentNode !== layer) layer.appendChild(f.g);
+  f.g.setAttribute("transform", `translate(${f.x.toFixed(1)} ${f.y.toFixed(1)})`);
+  f.g.querySelector(".fig").setAttribute("transform", `scale(${f.flip} 1)`);
+}
+
+/* ── 카드 ─────────────────────────────────── */
+function openPop(kind, id) { office.pop = { kind, id }; office.popKey = ""; if (kind === "agent" || kind === "boss") select(kind === "boss" ? "main" : id); }
+function closePop() { office.pop = null; office.popKey = ""; $("#office-pop").hidden = true; }
+
+function popHtml(t) {
+  const p = office.pop;
+  const pill = st => `<span class="pop-st st-${st}"><span class="dot"></span>${STATUS_TEXT[st]}</span>`;
+  const recent = a => a.evs.filter(e => e.t0 <= t && e.cat !== "agent").slice(-3).reverse()
+    .map(e => `<li><i style="background:${CAT_COLOR[e.cat]}"></i><b>${esc(e.cat === "wait" ? "승인 대기" : e.tool)}</b><span>${esc(shortArg(e.arg, 30))}</span><time>${fmt(e.t0)}</time></li>`).join("");
+  const nowSec = w => `<section class="pop-now st-${w.st}"><h4>지금 하는 일</h4><p><i style="background:${w.cat ? CAT_COLOR[w.cat] || "#8a93a3" : "transparent"}"></i>${esc(w.title)}${w.since != null ? ` <time>${w.since.toFixed(0)}초째</time>` : ""}</p>${w.detail ? `<p class="mono">${esc(w.detail.length > 160 ? w.detail.slice(0, 159) + "…" : w.detail)}</p>` : ""}</section>`;
+  if (p.kind === "agent") {
+    const a = byId[p.id]; if (!a) return null;
+    const w = currentWork(a, t);
+    const elapsed = Math.min(t, a.end ?? t) - a.start;
+    return `<header><i class="sw-type" style="background:${typeColor(a.type)}"></i><div><strong>${esc(a.type)}</strong><span>${a.model ? esc(a.model) + " · " : ""}경과 ${fmt(elapsed)}</span></div>${pill(w.st)}</header>
+      <section><h4>역할</h4><p>${esc(roleOf(a.type))}</p></section>
+      <section><h4>맡은 일</h4><p class="task">${esc(a.name)}</p>${a.prompt ? `<p class="sub">${esc(a.prompt.length > 140 ? a.prompt.slice(0, 139) + "…" : a.prompt)}</p>` : ""}</section>
+      ${nowSec(w)}
+      ${a.evs.length ? `<section><h4>최근 작업</h4><ul class="recent">${recent(a)}</ul></section>` : ""}
+      <footer><button class="btn" data-act="detail">전체 기록 보기</button></footer>`;
+  }
+  if (p.kind === "room") {
+    const ty = p.id;
+    return `<header><i class="sw-type" style="background:${typeColor(ty)}"></i><div><strong>${esc(ty)}</strong><span>${esc(shortType(ty))} 담당 방</span></div><span class="pop-st"><span class="dot"></span>월급루팡 중</span></header>
+      <section><h4>역할</h4><p>${esc(roleOf(ty))}</p></section>
+      <section><h4>지금 하는 일</h4><p class="sub">맡은 일이 없어 자리에서 쉬고 있습니다. 사장이 이 유형으로 일감을 주면 사장실로 가서 일을 받고 자리로 돌아와 일합니다.</p></section>`;
+  }
+  if (p.kind === "boss") {
+    const a = byId.main; if (!a) return null;
+    const w = currentWork(a, t);
+    return `<header><i class="sw-type" style="background:${typeColor("main")}"></i><div><strong>사장 · 메인 세션</strong><span>${a.model ? esc(a.model) + " · " : ""}경과 ${fmt(Math.min(t, a.end ?? t))}</span></div>${pill(w.st)}</header>
+      <section><h4>역할</h4><p>${esc(ROLE_DESC.main)}</p></section>
+      ${a.prompt ? `<section><h4>받은 요청</h4><p class="sub">${esc(a.prompt.length > 160 ? a.prompt.slice(0, 159) + "…" : a.prompt)}</p></section>` : ""}
+      ${nowSec(w)}
+      <footer><button class="btn" data-act="detail">전체 기록 보기</button></footer>`;
+  }
+  return null;
+}
+
+function renderPop(t) {
+  const el = $("#office-pop");
+  if (!office.pop) { el.hidden = true; return; }
+  const p = office.pop;
+  let key;
+  if (p.kind === "room") key = `room|${p.id}`;
+  else {
+    const a = byId[p.kind === "boss" ? "main" : p.id];
+    if (!a) { closePop(); return; }
+    const w = currentWork(a, t);
+    key = `${p.kind}|${a.id}|${w.st}|${w.title}|${w.detail}|${a.evs.length}|${Math.floor(t)}`;
+  }
+  if (key !== office.popKey) {
+    office.popKey = key;
+    const html = popHtml(t);
+    if (!html) { closePop(); return; }
+    el.innerHTML = html;
+  }
+  el.hidden = false;
+  // 누른 대상 근처에 띄운다
+  let anchor = null;
+  if (p.kind === "boss") anchor = { x: BOSS.x, y: BOSS.y + 64 };
+  else if (p.kind === "agent") { const f = office.instFig[p.id]; if (f) anchor = { x: f.x, y: f.y + 24 }; }
+  else { const i = office.roomTypes.indexOf(p.id); if (i >= 0) { const r = roomRect(i); anchor = { x: r.x + r.w / 2, y: r.y + r.h - 6 }; } }
+  const svg = $("#office-svg"), box = $("#office").getBoundingClientRect();
+  if (anchor && svg.getScreenCTM()) {
+    const pt = svg.createSVGPoint(); pt.x = anchor.x; pt.y = anchor.y;
+    const sp = pt.matrixTransform(svg.getScreenCTM());
+    const pw = el.offsetWidth;
+    const left = Math.max(8, Math.min(box.width - pw - 8, sp.x - box.left - pw / 2));
+    el.style.left = left + "px"; el.style.top = (sp.y - box.top + $("#office").scrollTop + 8) + "px";
+  }
+}
+
+$("#office-pop").addEventListener("click", e => {
+  e.stopPropagation();
+  if (e.target.closest("[data-act=detail]")) { select(office.pop.kind === "boss" ? "main" : office.pop.id); }
+});
+$("#office").addEventListener("click", () => closePop());
+document.addEventListener("keydown", e => { if (e.key === "Escape" && office.pop) closePop(); });
+
+/* ── 프레임 ───────────────────────────────── */
+function phraseFor(f, a, t) {
+  switch (f.phase) {
+    case "toBoss": return { text: "사장님 호출받고 가는 중", cat: "agent" };
+    case "receive": return { text: "일감 받는 중", cat: "agent" };
+    case "toSeat": return { text: "자리로 돌아가는 중", cat: "agent" };
+    case "report": return { text: "보고하러 가는 중", cat: "agent" };
+    case "reportBack": return { text: "보고 끝, 복귀 중", cat: "agent" };
+  }
+  const w = currentWork(a, t);
+  if (w.st === "failed") return { text: "실패해서 멘붕 중", cat: "err" };
+  if (w.st === "waiting") return { text: `결재 기다리는 중 · ${shortArg(w.detail.replace(/^[^:]+:\s*/, ""), 14)}`, cat: "wait" };
+  if (w.cat === "think") return { text: "머리 굴리는 중", cat: "think" };
+  return { text: `${WORK_PHRASE[w.cat] || "작업 중"} · ${shortArg(w.detail, 14)}`, cat: w.cat };
+}
+
+function officeFrame(now) {
+  const dt = Math.max(0, Math.min(0.1, (now - office.last) / 1000)); office.last = now;
+  if (state.view !== "office") return;
+  if (!office.built) buildOffice();
+  const t = state.t;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const step = 250 * dt;
+
+  // 재생 위치가 뒤로 가면(다시 재생, 세션 전환) 상태를 초기화한다
+  if (t < office.lastT - 0.5 || office.sid !== liveSid) {
+    office.closed.clear(); office.instFig = {};
+    for (const f of Object.values(office.figs)) { f.inst = null; f.phase = "idle"; f.reset = true; }
+    office.sid = liveSid;
+  }
+  office.lastT = t;
+
+  const subs = order.filter(a => a.id !== "main");
+  const types = [...new Set([...DEFAULT_TYPES, ...subs.map(a => a.type)])].slice(0, 6);
+  office.roomTypes = types;
+  const alive = new Set();
+  let calling = false;
+
+  types.forEach((ty, i) => {
+    // 이 유형의 진행 중인 일감 (시작 순서), 이미 보고까지 끝난 것은 제외
+    const held = new Set(Object.values(office.figs).map(f => f.inst).filter(Boolean));
+    const active = subs.filter(a => {
+      if (a.type !== ty || t < a.start || office.closed.has(a.id)) return false;
+      if (held.has(a.id) || a.end == null) return true;
+      // 화면을 열기 전에 이미 끝나 보고까지 마쳤을 일감은 제외
+      const grace = a.failed ? FAIL_STAY_S : 6;
+      if (t - a.end > grace) { office.closed.add(a.id); return false; }
+      return true;
+    }).sort((p, q) => p.start - q.start);
+    const seats = Math.min(3, Math.max(1, active.length, ...Object.values(office.figs).filter(f => f.type === ty && f.inst).map(f => f.seat + 1)));
+    for (let k = 0; k < 3; k++) {
+      const key = `${ty}:${k}`;
+      let f = office.figs[key];
+      const holds = f?.inst && active.some(a => a.id === f.inst);
+      if (k >= seats && !holds) { if (f) { f.g.remove(); delete office.figs[key]; } continue; }
+      if (!f) {
+        f = office.figs[key] = Object.assign(makeFigure(key, typeColor(ty), false, () => f.inst ? openPop("agent", f.inst) : openPop("room", ty)), { type: ty, seat: k, phase: "idle", inst: null });
+        snap(f, seatPos(i, k));
+      }
+      if (f.reset) { snap(f, seatPos(i, k)); f.reset = false; }
+      alive.add(key);
+      // 비어 있는 자리면 다음 일감을 맡는다
+      if (!f.inst) {
+        const taken = new Set(Object.values(office.figs).map(x => x.inst).filter(Boolean));
+        const next = active.find(a => !taken.has(a.id));
+        if (next) {
+          f.inst = next.id; f.phase = "toBoss"; f.arrivedAt = null;
+          // 이미 한참 진행 중인 일감이면 걸어가는 과정을 건너뛴다
+          if (reduce || t - next.start > 4) { f.phase = "work"; snap(f, seatPos(i, k)); }
+        }
+      }
+      const a = f.inst ? byId[f.inst] : null;
+      if (f.inst && !a) { f.inst = null; f.phase = "idle"; }
+      if (a) office.instFig[a.id] = f;
+      const seat = seatPos(i, k);
+      const st = a ? statusAt(a, t) : "idle";
+      let target = seat, arrived;
+      if (a) {
+        const spot = { x: RECEIVE.x + [0, -44, 44][k], y: RECEIVE.y + (k ? 6 : 0) };  // 여러 명이면 나란히
+        if (f.phase === "toBoss" || f.phase === "receive" || f.phase === "report") target = spot;
+        if (f.phase === "work" && st === "done") f.phase = "report";
+        if (f.phase === "work" && st === "failed" && t - a.end > FAIL_STAY_S) { office.closed.add(a.id); f.inst = null; f.phase = "idle"; }
+        if (f.phase === "report") target = spot;
+      }
+      arrived = reduce ? (snap(f, target), true) : walk(f, target, step);
+      if (a && arrived) {
+        if (f.phase === "toBoss") { f.phase = "receive"; f.arrivedAt = now; }
+        else if (f.phase === "receive" && now - f.arrivedAt > PAUSE_MS) f.phase = "toSeat";
+        else if (f.phase === "toSeat") f.phase = st === "done" ? "report" : "work";
+        else if (f.phase === "report") { f.phase = "reportBack"; }
+        else if (f.phase === "reportBack") { office.closed.add(a.id); f.inst = null; f.phase = "idle"; }
+      }
+      if (f.phase === "receive" || f.phase === "report") calling = true;
+
+      const walking = f.path && f.path.length > 0;
+      const cur = f.inst ? byId[f.inst] : null;
+      const curSt = cur ? statusAt(cur, t) : "idle";
+      let mode = "slack", mark = null;
+      if (cur && f.phase === "work") {
+        const w = currentWork(cur, t);
+        mode = curSt === "waiting" ? "wait" : curSt === "failed" ? "fail" : w.cat === "think" ? "think" : "work";
+        mark = curSt === "waiting" ? "wait" : curSt === "failed" ? "err" : null;
+      } else if (cur) mode = "idle";
+      const cls = ["worker", cur ? `st-${curSt}` : "bench", walking ? "walking" : `m-${mode}`];
+      if (f.phase === "report" || f.phase === "reportBack") cls.push("carry");
+      if (cur && office.pop?.kind === "agent" && office.pop.id === cur.id) cls.push("selected");
+      if (state.filter && cur && curSt !== state.filter) cls.push("dim");
+      setLabel(f, walking ? shortType(ty) : "", cur ? `${cur.name} · ${STATUS_TEXT[curSt]}, 작업 보기` : `${ty} 담당, 월급루팡 중`);
+      setMark(f, walking ? null : mark);
+      const standing = walking || ["toBoss", "receive", "report", "reportBack", "toSeat"].includes(f.phase) && !(f.phase === "toSeat" && !walking);
+      place(f, cls.join(" "), standing);
+    }
+
+    // 방 명패와 상태줄
+    const working = Object.values(office.figs).filter(f => f.type === ty && f.inst && byId[f.inst]);
+    const main = working[0];
+    const ph = main ? phraseFor(main, byId[main.inst], t) : { text: "월급루팡 중", cat: null };
+    const st = main ? (main.phase === "work" ? statusAt(byId[main.inst], t) : "running") : null;
+    const more = working.length > 1 ? ` 외 ${working.length - 1}명` : "";
+    const fitW = (str, max) => { let w = 0, out = ""; for (const ch of str) { w += ch.charCodeAt(0) > 0x2e80 ? 13 : 7.4; if (w > max) return out.trimEnd() + "…"; out += ch; } return out; };
+    const text = fitW(ph.text, 214 - (more ? 52 : 0)) + more;
+    const rkey = `${ty}|${st}|${text}|${ph.cat}|${working.map(f => f.seat).join("")}`;
+    if (office.roomKey[i] !== rkey) {
+      office.roomKey[i] = rkey;
+      document.getElementById("room-" + i).setAttribute("class", "room" + (st ? ` occupied st-${st}` : " idle"));
+      document.getElementById("room-name-" + i).textContent = ty;
+      const role = roleOf(ty).replace(/입니다\.?$/, "");
+      document.getElementById("room-role-" + i).textContent = role.length > 26 ? role.slice(0, 25) + "…" : role;
+      document.getElementById("room-status-" + i).textContent = text;
+      document.getElementById("room-icon-" + i).innerHTML = ph.cat ? `<circle r="8" fill="${CAT_COLOR[ph.cat] || "#8a93a3"}"/><g transform="scale(.7)">${GLYPH[ph.cat] || ""}</g>` : `<circle r="8" fill="#d8dce4"/><text x="-3.5" y="3.5" class="zz-icon">z</text>`;
+      for (let k = 0; k < 3; k++) {
+        const lp = document.getElementById(`laptop-${i}-${k}`);
+        const occupied = Object.values(office.figs).some(f => f.type === ty && f.seat === k);
+        const busy = working.some(f => f.seat === k && f.phase === "work");
+        lp.style.display = occupied ? "" : "none";
+        lp.querySelector(".room-screen").style.fill = busy ? "#3f6fd8" : "";
+      }
+    }
+  });
+  // 남는 방은 빈 방으로
+  for (let i = types.length; i < 6; i++) {
+    if (office.roomKey[i] === "empty") continue;
+    office.roomKey[i] = "empty";
+    document.getElementById("room-" + i).setAttribute("class", "room empty");
+    document.getElementById("room-name-" + i).textContent = "빈 방";
+    document.getElementById("room-role-" + i).textContent = "새로운 유형의 직원이 오면 이 방을 씁니다";
+    document.getElementById("room-status-" + i).textContent = "";
+    document.getElementById("room-icon-" + i).innerHTML = "";
+    for (let k = 0; k < 3; k++) document.getElementById(`laptop-${i}-${k}`).style.display = "none";
+  }
+  // 방에 배정되지 않은 유형(6개 초과)은 그리지 않는다
+  for (const key of Object.keys(office.figs)) if (key !== "__boss" && !alive.has(key)) { office.figs[key].g.remove(); delete office.figs[key]; }
+
+  // 사장
+  const m = byId.main;
+  if (m) {
+    let f = office.figs.__boss;
+    if (!f) { f = office.figs.__boss = Object.assign(makeFigure("__boss", typeColor("main"), true, () => openPop("boss", "main")), { type: "__boss" }); snap(f, BOSS); }
+    alive.add("__boss");
+    const st = statusAt(m, t), w = currentWork(m, t);
+    const spawning = m.evs.some(e => e.cat === "agent" && t - e.t0 >= 0 && t - e.t0 < 2.5);
+    const chip = calling ? "일감 건네는 중" : spawning ? "직원 호출 중" : st === "waiting" ? "승인 기다리는 중"
+      : st === "done" ? "한숨 돌리는 중" : w.cat === "think" ? "구상 중" : `직접 ${WORK_PHRASE[w.cat] || "작업 중"}`;
+    const ce = document.querySelector("#boss-chip .chip-text");
+    if (ce.textContent !== chip) {
+      ce.textContent = chip;
+      const bw = [...chip].reduce((s, ch) => s + (ch.charCodeAt(0) > 0x2e80 ? 13 : 7.5), 0) + 30;
+      const bg = document.querySelector("#boss-chip .chip-bg"); bg.setAttribute("x", -bw / 2); bg.setAttribute("width", bw);
+    }
+    f.flip = 1;
+    setLabel(f, "", "사장(메인 세션), 상황 보기");
+    setMark(f, st === "waiting" ? "wait" : null);
+    const sel = office.pop?.kind === "boss";
+    place(f, `worker boss st-${st} ${calling || spawning ? "m-work" : st === "waiting" ? "m-wait" : st === "running" && w.cat !== "think" ? "m-work" : "m-idle"}${sel ? " selected" : ""}`);
+  }
+
+  const sec = t % 60, min = (t / 60) % 60;
+  document.getElementById("clock-s").setAttribute("transform", `rotate(${sec * 6} 276 50)`);
+  document.getElementById("clock-m").setAttribute("transform", `rotate(${min * 6} 276 50)`);
+  document.getElementById("office-clock").textContent = fmt(t);
+  renderPop(t);
+}
+
+function setView(v) {
+  state.view = v;
+  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
+  $("#lanes").hidden = v !== "timeline";
+  $("#office").hidden = v !== "office";
+  $("#legend-items").hidden = v !== "timeline";
+  $("#legend-office").hidden = v !== "office";
+  try { localStorage.setItem("monitor.view.v2", v); } catch {}
+}
+document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
+(function officeLoop(ts) { officeFrame(ts); requestAnimationFrame(officeLoop); })(performance.now());
+
+const q = new URLSearchParams(location.search);
+if (location.protocol.startsWith("http") && q.get("demo") !== "1") {
+  startLive();
+} else {
+  setModel(demoModel());
+  state.total = Math.ceil(Math.max(...agents.map(a => a.end)) + 4);
+  if (q.has("t")) { state.t = +q.get("t"); state.playing = false; }
+  if (q.has("sel")) state.sel = q.get("sel");
+  syncPlay(); render();
+}
+let savedView = null; try { savedView = localStorage.getItem("monitor.view.v2"); } catch {}
+setView(q.get("view") || savedView || "office");
+if (q.has("pop")) { const [k, ...rest] = q.get("pop").split(":"); office.pop = { kind: k === "bench" ? "room" : k, id: rest.join(":") }; }
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

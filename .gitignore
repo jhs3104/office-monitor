@@ -1,0 +1,11 @@
+# 로컬 기록과 작업 산출물 (프롬프트·경로가 들어 있음)
+data/
+.impeccable/
+.office-monitor/
+# 로컬 개발용 설정과 외부 스킬 (저장소에 포함하지 않음)
+.claude/
+node_modules/
+.DS_Store
+
+# 기록 폴더를 저장소 안으로 지정했을 때
+events.jsonl
