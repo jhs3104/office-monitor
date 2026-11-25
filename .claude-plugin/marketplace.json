@@ -9,6 +9,11 @@
       "name": "office-monitor",
       "source": "./",
       "description": "서브에이전트 작업 모니터(타임라인·인력사무소 뷰)"
+    },
+    {
+      "name": "office-monitor-pane",
+      "source": "./pane",
+      "description": "터미널 Claude Code 옆에 이 세션의 사무실(사장·서브에이전트 상태, 모델·effort, 처리 시간)을 보여 주는 패널 모드"
     }
   ]
 }

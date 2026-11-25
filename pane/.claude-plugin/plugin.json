@@ -1,0 +1,8 @@
+{
+  "name": "office-monitor-pane",
+  "version": "0.1.0",
+  "description": "터미널의 Claude Code 화면 옆에 이 세션의 사무실(사장과 서브에이전트 직원들의 상태·모델·effort·처리 시간)을 보여 주는 패널과 한 줄 요약",
+  "author": { "name": "jhs3104", "url": "https://github.com/jhs3104" },
+  "license": "MIT",
+  "types": "./types/index.d.ts"
+}
