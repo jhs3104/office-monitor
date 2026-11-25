@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import os from "node:os";
+import { execFileSync } from "node:child_process";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.OFFICE_MONITOR_PORT || 47318);
@@ -29,10 +30,74 @@ function summarizeInput(tool, input = {}) {
   if (!input || typeof input !== "object") return "";
   const pick =
     input.command ?? input.file_path ?? input.notebook_path ?? input.pattern ?? input.url ??
-    input.query ?? input.description ?? input.skill ?? input.prompt ?? "";
+    input.query ?? input.description ?? input.skill ?? input.prompt ?? input.task_id ?? input.shell_id ?? "";  // task_id: TaskStop 대상
   let s = String(pick);
   if (input.pattern && input.path) s = `${input.pattern}  (${input.path})`;
   return cut(s.replace(/\s+/g, " ").trim(), 240);
+}
+
+// 작업 폴더 → 프로젝트 이름. git 워크트리면 원래 저장소 이름으로 묶는다 (폴더별로 한 번만 계산)
+const projectCache = new Map();
+function projectOf(cwd) {
+  if (!cwd) return null;
+  if (projectCache.has(cwd)) return projectCache.get(cwd);
+  let root = cwd.replace(/\/\.claude\/worktrees\/[^/]+.*$/, "");
+  let settled = true;   // git이 답을 줬거나(저장소 아님 포함) 확실히 판단된 경우에만 저장한다
+  try {
+    // --path-format(git 2.31+)은 쓰지 않는다: 상대 경로가 오면 직접 절대 경로로 바꾼다.
+    // git은 실제 경로 기준으로 답하므로, 심볼릭 링크로 연 폴더도 실제 경로로 바꾼 뒤 해석한다.
+    let real = cwd;
+    try { real = fs.realpathSync(cwd); } catch {}
+    const out = execFileSync("git", ["-C", real, "rev-parse", "--git-common-dir"],
+      { encoding: "utf8", timeout: 800, stdio: ["ignore", "pipe", "ignore"] }).trim().split("\n")[0];
+    if (out && !out.startsWith("-")) {
+      const common = path.resolve(real, out);
+      root = path.basename(common) === ".git" ? path.dirname(common) : common.replace(/\.git$/, "");
+    }
+  } catch (err) {
+    // 저장소가 아니면(종료 코드 있음) 폴더 경로를 쓰고 저장한다. 시간 초과·git 없음은 다음에 다시 시도한다.
+    if (err.status == null) settled = false;
+  }
+  // 이름은 저장소 폴더 이름, 구분은 전체 경로로 한다 (다른 곳에 같은 이름의 저장소가 있어도 섞이지 않게)
+  const info = { name: cut(path.basename(root) || root, 60), root: settled ? cut(root, 300) : null };
+  if (settled) projectCache.set(cwd, info);
+  return info;
+}
+
+// 모델: hook 입력에는 거의 없어서 Claude Code 기록 파일에서 읽는다 (~/.claude/projects 아래만)
+//  - 메인 세션: transcript 끝부분의 마지막 응답 model (도중에 /model로 바꾸면 반영)
+//  - 서브에이전트: <세션>/subagents/agent-<id>.meta.json 의 model
+const PROJECTS_DIR = path.join(os.homedir(), ".claude", "projects") + path.sep;
+const safePath = f => typeof f === "string" && path.resolve(f).startsWith(PROJECTS_DIR) ? path.resolve(f) : null;
+const mainModelAt = new Map(); // session → { at, model }
+function mainModel(sessionId, transcript, force) {
+  const f = safePath(transcript); if (!f || !f.endsWith(".jsonl")) return null;
+  const prev = mainModelAt.get(sessionId);
+  // 알면 15초, 아직 모르면 3초 간격으로만 다시 읽는다 (요청·응답 시작·끝에는 항상 다시 읽음)
+  if (prev && !force && Date.now() - prev.at < (prev.model ? 15000 : 3000)) return prev.model;
+  let model = prev?.model || null;
+  try {
+    const fd = fs.openSync(f, "r"), size = fs.fstatSync(fd).size, len = Math.min(size, 256 * 1024);
+    const buf = Buffer.alloc(len); fs.readSync(fd, buf, 0, len, size - len); fs.closeSync(fd);
+    // 실제 응답의 모델 ID만 쓴다(claude-…, Bedrock의 us.anthropic.claude-…, Vertex의 claude-…@날짜).
+    // "<synthetic>"(내부 메시지)이나 "haiku" 같은 별칭(도구 입력)은 건너뛴다.
+    const all = [...buf.toString("utf8").matchAll(/"model":"((?:[a-z-]{2,8}\.)?(?:anthropic\.)?claude-[\w.@:-]{1,80})"/g)];
+    if (all.length) model = all[all.length - 1][1];
+  } catch {}
+  mainModelAt.set(sessionId, { at: Date.now(), model });
+  return model;
+}
+const subModels = new Map(); // agent_id → model
+function subModel(sessionId, agentId, transcript) {
+  if (subModels.has(agentId)) return subModels.get(agentId);
+  const f = safePath(transcript); if (!f || !sessionId || !/^[\w-]{1,80}$/.test(agentId) || !/^[\w-]{1,80}$/.test(sessionId)) return null;
+  try {
+    const meta = JSON.parse(fs.readFileSync(path.join(path.dirname(f), sessionId, "subagents", `agent-${agentId}.meta.json`), "utf8"));
+    // "inherit"(메인과 같은 모델)이거나 값이 없으면 저장하지 않는다. 화면이 메인 모델로 채운다.
+    if (meta.model && meta.model !== "inherit") { subModels.set(agentId, String(meta.model).slice(0, 80)); return subModels.get(agentId); }
+    if (meta.model === "inherit") { subModels.set(agentId, null); return null; }
+  } catch {}
+  return null;
 }
 
 function slim(p) {
@@ -44,6 +109,9 @@ function slim(p) {
     agentType: str(p.agent_type, 80),
     cwd: str(p.cwd, 300),
   };
+  const proj = projectOf(e.cwd);
+  e.project = proj?.name ?? null;
+  e.projectRoot = proj?.root ?? null;
   const ti = p.tool_input && typeof p.tool_input === "object" ? p.tool_input : {};
   if (p.tool_name) {
     e.tool = str(p.tool_name, 80);
@@ -62,7 +130,14 @@ function slim(p) {
   if (e.event === "UserPromptSubmit") e.prompt = str(p.prompt, 600) || "";
   if (e.event === "Notification") e.message = str(p.message, 300) || "";
   if (e.event === "SessionStart") e.source = str(p.source, 40);
-  if (e.event === "SessionStart" || e.event === "SubagentStart") e.model = str(p.model, 80);
+  e.model = str(p.model, 80);
+  if (!e.model && e.session) {
+    e.model = e.agent ? subModel(e.session, e.agent, p.transcript_path)
+      : mainModel(e.session, p.transcript_path, ["SessionStart", "UserPromptSubmit", "Stop"].includes(e.event));
+  }
+  if (!e.model) delete e.model;
+  const effort = str(p.effort?.level ?? p.effort, 20);
+  if (effort) e.effort = effort;
   if (e.event === "SubagentStop" || e.event === "Stop") e.result = str(p.last_assistant_message, 600) || "";
   return e;
 }

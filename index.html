@@ -82,7 +82,8 @@
   .count b { color: var(--ink); font-weight: 650; }
   .count:hover { background: var(--panel-2); }
   .count[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
-  .clock { font: 600 15px/1 var(--mono); color: var(--ink); min-width: 64px; text-align: right; }
+  .clock { font: 600 15px/1 var(--mono); color: var(--ink); min-width: 64px; text-align: right; white-space: nowrap; }
+  .clock small { display: block; font: 500 11px var(--font); color: var(--ink-3); margin-bottom: 3px; }
   .controls { display: flex; gap: 4px; align-items: center; }
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -285,41 +286,73 @@
   .legend-items { display: inline-flex; gap: 16px; flex-wrap: wrap; align-items: center; }
   .view-tabs button { font-family: var(--font); font-size: 12.5px; padding: 0 12px; }
   .office { flex: 1; min-height: 0; overflow: auto; position: relative; padding: 16px 20px 24px; }
-  #office-svg { width: 100%; max-width: 1240px; height: auto; display: block; margin: 0 auto; }
-  #office-svg text { user-select: none; -webkit-user-select: none; }
-  #office-svg .agency-sign { font: 750 22px var(--font); fill: var(--ink); letter-spacing: -0.02em; }
-  #office-svg .clock-label { font: 600 12.5px var(--mono); fill: var(--ink-2); }
-  #office-svg .desk-plaque { font: 700 11px var(--font); fill: #f3e6d4; }
-  #boss-chip .chip-bg { fill: #fff; stroke: #e3dccf; }
-  #boss-chip .chip-text { font: 600 13px var(--font); fill: var(--ink); }
+  .office-stack { display: flex; flex-direction: column; gap: 14px; max-width: 1240px; margin: 0 auto; }
+  .osec { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; scroll-margin-top: 12px; }
+  .osec.focused { border-color: var(--line-strong); box-shadow: 0 1px 0 rgba(20,25,34,.03), 0 6px 18px rgba(20,25,34,.06); }
+  .osec-head { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 16px; cursor: pointer; user-select: none; }
+  .osec-head:hover { background: var(--panel-2); }
+  .osec-head .pdot { width: 9px; height: 9px; border-radius: 50%; background: var(--line-strong); flex: none; }
+  .osec.busy .pdot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .osec.waiting .pdot { background: var(--c-wait); box-shadow: 0 0 0 3px var(--wait-soft); }
+  .osec-name { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 32%; flex: none; }
+  .osec-st { font: 600 12.5px var(--font); color: var(--ink-2); background: var(--panel-2); border-radius: 999px; padding: 3px 10px; white-space: nowrap; flex: none; }
+  .osec.busy .osec-st { color: var(--accent); background: var(--accent-soft); }
+  .osec.waiting .osec-st { color: var(--wait); background: var(--wait-soft); }
+  .osec-meta { font: 500 12.5px var(--font); color: var(--ink-3); white-space: nowrap; flex: none; }
+  .osec-prompt { flex: 1; min-width: 0; font-size: 12.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .osec-view { flex: none; }
+  .osec-view button { height: 26px; padding: 0 10px; font: 500 12px var(--font); }
+  .osec.tl .office-svg { display: none; }
+  .osec-body .lanes { max-height: 70vh; background: var(--bg); }
+  .lanes-legend { position: sticky; left: 0; background: var(--bg); }
+  .osec-close { display: inline-grid; place-items: center; width: 26px; height: 26px; flex: none; border: 0; border-radius: 7px; background: none; color: var(--ink-3); cursor: pointer; opacity: 0; transition: opacity .12s var(--ease), background-color .12s var(--ease); }
+  .osec-head:hover .osec-close, .osec-close:focus-visible { opacity: 1; }
+  .osec-close:hover { background: var(--line); color: var(--ink); }
+  .osec-chev { flex: none; color: var(--ink-3); transition: transform .2s var(--ease); }
+  .osec.collapsed .osec-chev { transform: rotate(-90deg); }
+  .osec-body { border-top: 1px solid var(--line); background: #eef0f3; }
+  .osec.collapsed .osec-body { display: none; }
+  .office-empty { margin: 40px auto; }
+  .office-svg { width: 100%; max-width: 1240px; height: auto; display: block; margin: 0 auto; }
+  .office-svg text { user-select: none; -webkit-user-select: none; }
+  .office-svg .agency-sign { font: 750 22px var(--font); fill: var(--ink); letter-spacing: -0.02em; }
+  .office-svg .boss-model { font: 600 12.5px var(--font); fill: #8a7f6c; }
+  .office-svg .room-timer { font: 600 12.5px var(--mono); fill: var(--ink-2); }
+  .office-svg .room.st-running .room-timer { fill: var(--accent); }
+  .office-svg .room.st-waiting .room-timer { fill: var(--wait); }
+  .office-svg .room-model { font: 600 11.5px var(--font); fill: var(--ink-3); }
+  .office-svg .clock-label { font: 600 12.5px var(--mono); fill: var(--ink-2); }
+  .office-svg .desk-plaque { font: 700 11px var(--font); fill: #f3e6d4; }
+  .boss-chip .chip-bg { fill: #fff; stroke: #e3dccf; }
+  .boss-chip .chip-text { font: 600 13px var(--font); fill: var(--ink); }
 
-  #office-svg .room { cursor: pointer; }
-  #office-svg .room-box { fill: #fff; stroke: #e1e4ea; stroke-width: 1.5; transition: fill .25s var(--ease), stroke .25s var(--ease); }
-  #office-svg .room:hover .room-box { stroke: #c9cfd9; }
-  #office-svg .room-rug { fill: #f3f5f8; transition: fill .25s var(--ease); }
-  #office-svg .room-door { fill: #e2e6ec; }
-  #office-svg .plate-name { font: 700 16px var(--font); fill: var(--ink); letter-spacing: -0.01em; }
-  #office-svg .plate-no { font: 500 12px var(--font); fill: var(--ink-3); }
-  #office-svg .room-status text { font: 600 13px var(--font); fill: var(--ink-2); }
-  #office-svg .room.idle .room-status text { fill: #a0a7b3; font-weight: 500; }
-  #office-svg .room.empty { cursor: default; }
-  #office-svg .room.empty .plate-name { fill: var(--ink-3); font-weight: 600; }
-  #office-svg .room.empty .room-box { fill: #f7f8fa; stroke-dasharray: 6 6; }
-  #office-svg .room.empty .furniture { opacity: .4; }
-  #office-svg .zz-icon { font: 700 10px var(--font); fill: #fff; }
-  #office-svg .room-lamp { fill: #dde1e7; transition: fill .2s var(--ease); }
-  #office-svg .room-screen { fill: #4a5363; transition: fill .2s var(--ease); }
-  #office-svg .room.st-running .room-lamp { fill: var(--accent); }
-  #office-svg .room.st-running .room-status text { fill: var(--accent); }
-  #office-svg .room.st-waiting .room-box { fill: var(--wait-soft); stroke: var(--c-wait); }
-  #office-svg .room.st-waiting .room-rug { fill: #f7e6c1; }
-  #office-svg .room.st-waiting .room-lamp { fill: var(--c-wait); animation: lamp 1.2s ease-in-out infinite; }
-  #office-svg .room.st-waiting .room-status text { fill: var(--wait); }
-  #office-svg .room.st-failed .room-box { fill: var(--fail-soft); stroke: #e3a7a2; }
-  #office-svg .room.st-failed .room-rug { fill: #f5d7d3; }
-  #office-svg .room.st-failed .room-lamp { fill: var(--fail); }
-  #office-svg .room.st-failed .room-status text { fill: var(--fail); }
-  #office-svg .room.st-done .room-lamp { fill: var(--ok); }
+  .office-svg .room { cursor: pointer; }
+  .office-svg .room-box { fill: #fff; stroke: #e1e4ea; stroke-width: 1.5; transition: fill .25s var(--ease), stroke .25s var(--ease); }
+  .office-svg .room:hover .room-box { stroke: #c9cfd9; }
+  .office-svg .room-rug { fill: #f3f5f8; transition: fill .25s var(--ease); }
+  .office-svg .room-door { fill: #e2e6ec; }
+  .office-svg .plate-name { font: 700 16px var(--font); fill: var(--ink); letter-spacing: -0.01em; }
+  .office-svg .plate-no { font: 500 12px var(--font); fill: var(--ink-3); }
+  .office-svg .room-status text { font: 600 13px var(--font); fill: var(--ink-2); }
+  .office-svg .room.idle .room-status text { fill: #a0a7b3; font-weight: 500; }
+  .office-svg .room.empty { cursor: default; }
+  .office-svg .room.empty .plate-name { fill: var(--ink-3); font-weight: 600; }
+  .office-svg .room.empty .room-box { fill: #f7f8fa; stroke-dasharray: 6 6; }
+  .office-svg .room.empty .furniture { opacity: .4; }
+  .office-svg .zz-icon { font: 700 10px var(--font); fill: #fff; }
+  .office-svg .room-lamp { fill: #dde1e7; transition: fill .2s var(--ease); }
+  .office-svg .room-screen { fill: #4a5363; transition: fill .2s var(--ease); }
+  .office-svg .room.st-running .room-lamp { fill: var(--accent); }
+  .office-svg .room.st-running .room-status text { fill: var(--accent); }
+  .office-svg .room.st-waiting .room-box { fill: var(--wait-soft); stroke: var(--c-wait); }
+  .office-svg .room.st-waiting .room-rug { fill: #f7e6c1; }
+  .office-svg .room.st-waiting .room-lamp { fill: var(--c-wait); animation: lamp 1.2s ease-in-out infinite; }
+  .office-svg .room.st-waiting .room-status text { fill: var(--wait); }
+  .office-svg .room.st-failed .room-box { fill: var(--fail-soft); stroke: #e3a7a2; }
+  .office-svg .room.st-failed .room-rug { fill: #f5d7d3; }
+  .office-svg .room.st-failed .room-lamp { fill: var(--fail); }
+  .office-svg .room.st-failed .room-status text { fill: var(--fail); }
+  .office-svg .room.st-done .room-lamp { fill: var(--ok); }
   @keyframes lamp { 50% { opacity: .35; } }
 
   .worker { cursor: pointer; outline: none; transition: opacity .4s var(--ease); }
@@ -390,7 +423,7 @@
   .pop p + p { margin-top: 4px; }
   .pop .task { font-weight: 600; }
   .pop .sub { color: var(--ink-2); font-size: 12.5px; }
-  .pop .mono { font: 12px/1.5 var(--mono); color: var(--ink-2); overflow-wrap: anywhere; }
+  .pop .mono { font: 12px/1.5 var(--mono); color: var(--ink-2); overflow-wrap: anywhere; white-space: pre-line; }
   .pop .pop-now p:first-of-type { display: flex; align-items: center; gap: 7px; font-weight: 600; }
   .pop .pop-now i { width: 9px; height: 9px; border-radius: 3px; flex: none; }
   .pop .pop-now time { font: 500 11.5px var(--mono); color: var(--ink-3); margin-left: auto; }
@@ -459,30 +492,27 @@
 
   <div class="main">
     <section class="board" aria-label="에이전트 타임라인">
-      <div class="legend">
-        <div class="seg view-tabs" role="group" aria-label="보기 전환">
-          <button data-view="office" aria-pressed="true">오피스</button>
-          <button data-view="timeline" aria-pressed="false">타임라인</button>
+      <div id="lanes-home" hidden>
+      <div class="lanes" id="lanes">
+        <div class="legend lanes-legend">
+          <span><i class="sw" style="background:var(--c-search)"></i>탐색 (Read·Grep·Glob)</span>
+          <span><i class="sw" style="background:var(--c-edit)"></i>수정 (Edit·Write)</span>
+          <span><i class="sw" style="background:var(--c-shell)"></i>Bash</span>
+          <span><i class="sw" style="background:var(--c-web)"></i>웹 (WebFetch·Search)</span>
+          <span><i class="sw" style="background:var(--c-agent);width:3px;height:12px"></i>서브에이전트 호출</span>
+          <span><i class="sw wait"></i>권한 승인 대기</span>
         </div>
-        <span class="legend-items" id="legend-office">사장이 일감을 주면 그 유형 직원이 사장실로 가서 일을 받고 자기 자리로 돌아와 일합니다 · 사람이나 방을 누르면 역할과 지금 하는 일이 보입니다</span>
-        <span class="legend-items" id="legend-items" hidden>
-        <span><i class="sw" style="background:var(--c-search)"></i>탐색 (Read·Grep·Glob)</span>
-        <span><i class="sw" style="background:var(--c-edit)"></i>수정 (Edit·Write)</span>
-        <span><i class="sw" style="background:var(--c-shell)"></i>Bash</span>
-        <span><i class="sw" style="background:var(--c-web)"></i>웹 (WebFetch·Search)</span>
-        <span><i class="sw" style="background:var(--c-agent);width:3px;height:12px"></i>서브에이전트 호출</span>
-        <span><i class="sw wait"></i>권한 승인 대기</span>
-        </span>
-      </div>
-      <div class="lanes" id="lanes" hidden>
         <div class="lanes-inner">
           <div class="axis"><div class="lh">에이전트</div><div class="ticks" id="ticks"></div></div>
           <div class="rows" id="rows" role="listbox" aria-label="에이전트 목록"></div>
           <div class="links" id="links"></div>
         </div>
       </div>
+      </div>
       <div class="office" id="office">
-        <svg id="office-svg" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMin meet" role="img" aria-label="사무실 보기: 사장실과 유형별 직원 방"></svg>
+        <div class="office-stack" id="office-stack"></div>
+        <div class="no-data office-empty" id="office-empty" hidden><strong>아직 일한 세션이 없습니다</strong>
+          office-monitor 플러그인을 설치한 상태에서 Claude Code에 요청을 보내면, 프로젝트마다 사무실이 생깁니다.</div>
         <div class="pop" id="office-pop" role="dialog" aria-label="직원 정보" hidden></div>
       </div>
     </section>
@@ -498,7 +528,7 @@
    시간은 모두 "세션 시작으로부터 초" 단위. */
 
 const SCENARIO = [
-  { id: "main", parent: null, name: "메인 세션", type: "main", model: "opus-5-5", start: 0,
+  { id: "main", parent: null, name: "메인 세션", type: "main", model: "opus-5-5", effort: "high", start: 0,
     prompt: "결제 모듈(PaymentService)을 결제/환불 책임으로 분리하고, 기존 테스트를 유지한 채 리뷰까지 마쳐 줘.",
     result: "분리 완료. 테스트 148개 통과, 리뷰 지적 2건 보고.",
     events: [
@@ -512,40 +542,40 @@ const SCENARIO = [
       ["Bash", "./gradlew :payment:test", 6, 3100], ["Agent", "code-reviewer · 변경분 리뷰", 0.1, 500],
       ["gap", "", 48], ["Read", "review.md", 2, 2600], ["gap", "", 3]
     ] },
-  { id: "a1", parent: "main", name: "결제 모듈 구조 파악", type: "Explore", model: "haiku-5-5", start: 2.1,
+  { id: "a1", parent: "main", name: "결제 모듈 구조 파악", type: "Explore", model: "haiku-5-5", effort: "low", start: 2.1,
     prompt: "src/payment 아래 결제·환불 관련 클래스와 의존 관계를 정리해 줘. 결론만, medium 범위.",
     result: "PaymentService가 결제·환불·정산 3가지 책임을 가짐. 외부 의존 4개.",
     events: [["Glob", "src/payment/**/*.kt", 1.5, 900], ["Grep", "class .*Service", 2, 1400], ["Read", "PaymentService.kt", 3, 5200],
       ["Read", "RefundPolicy.kt", 2, 2100], ["Grep", "pgClient\\.", 2, 1300], ["Read", "PgClient.kt", 3, 3300],
       ["Read", "SettlementJob.kt", 2.5, 2600], ["Grep", "@Transactional", 1.5, 900], ["Read", "PaymentRepository.kt", 2, 1800]] },
-  { id: "a2", parent: "main", name: "기존 테스트 위치 탐색", type: "Explore", model: "haiku-5-5", start: 2.2,
+  { id: "a2", parent: "main", name: "기존 테스트 위치 탐색", type: "Explore", model: "haiku-5-5", effort: "low", start: 2.2,
     prompt: "결제 관련 테스트 파일 위치와 픽스처 구성을 찾아 줘.",
     result: "테스트 12개 파일, 공용 픽스처는 PaymentFixtures.kt.",
     events: [["Glob", "src/test/**/*Payment*", 1.5, 700], ["Grep", "@SpringBootTest", 2, 1100], ["Read", "PaymentServiceTest.kt", 3, 4100],
       ["Read", "PaymentFixtures.kt", 2, 1900], ["Glob", "src/test/**/*Refund*", 1, 600]] },
-  { id: "a3", parent: "main", name: "PG사 API 문서 확인", type: "web-fetch", model: "sonnet-5-5", start: 2.3,
+  { id: "a3", parent: "main", name: "PG사 API 문서 확인", type: "web-fetch", model: "sonnet-5-5", effort: "medium", start: 2.3,
     prompt: "PG사 환불 API의 부분 환불 파라미터와 멱등키 규칙을 확인해 줘.",
     error: "403 Forbidden — 문서 사이트가 자동 수집을 차단함.",
     events: [["WebSearch", "PG 부분환불 API idempotency", 3, 1500], ["WebFetch", "https://docs.pg.example/refund", 5, 300], ["error", "403 Forbidden", 0.6, 0]] },
-  { id: "a4", parent: "main", name: "PG사 API 문서 확인 (재시도)", type: "web-fetch", model: "sonnet-5-5", start: 16.5,
+  { id: "a4", parent: "main", name: "PG사 API 문서 확인 (재시도)", type: "web-fetch", model: "sonnet-5-5", effort: "medium", start: 16.5,
     prompt: "공개 개발자 포털 경로로 PG사 환불 API 문서를 다시 확인해 줘.",
     result: "부분 환불은 cancelAmount, 멱등키는 Idempotency-Key 헤더(24시간 유효).",
     events: [["WebSearch", "PG developer portal refund", 2.5, 1400], ["WebFetch", "https://developers.pg.example/refund", 6, 6800],
       ["WebFetch", "https://developers.pg.example/idempotency", 4, 3900]] },
-  { id: "a5", parent: "main", name: "리팩터링 설계안", type: "Plan", model: "opus-5-5", start: 39.2,
+  { id: "a5", parent: "main", name: "리팩터링 설계안", type: "Plan", model: "opus-5-5", effort: "high", start: 39.2,
     prompt: "탐색 결과를 바탕으로 PaymentService를 분리하는 단계별 계획과 위험 요소를 정리해 줘.",
     result: "3단계 계획: 인터페이스 추출 → 환불 이관 → 정산 분리(이번 범위 제외).",
     events: [["Read", "PaymentService.kt", 3, 5200], ["Read", "RefundPolicy.kt", 2, 2100], ["Grep", "refund\\(", 2, 1200],
       ["Read", "SettlementJob.kt", 3, 2600], ["Grep", "PaymentService", 2.5, 1600], ["Read", "build.gradle.kts", 2, 1300],
       ["Write", "plan.md", 4, 3800], ["Read", "plan.md", 1.5, 900]] },
-  { id: "a6", parent: "main", name: "PaymentService 분리", type: "general-purpose", model: "sonnet-5-5", start: 61.3,
+  { id: "a6", parent: "main", name: "PaymentService 분리", type: "general-purpose", model: "sonnet-5-5", effort: "medium", start: 61.3,
     prompt: "plan.md 1단계: PaymentService에서 결제 승인 책임을 PaymentApprover로 추출해 줘.",
     result: "PaymentApprover 추출, 호출부 6곳 수정, 단위 테스트 통과.",
     events: [["Read", "plan.md", 1.5, 900], ["Read", "PaymentService.kt", 3, 5200], ["Write", "PaymentApprover.kt", 6, 4600],
       ["Edit", "PaymentService.kt", 5, 3900], ["Grep", "paymentService.approve", 2, 1100], ["Edit", "CheckoutController.kt", 3, 2200],
       ["Edit", "OrderFacade.kt", 3, 2100], ["permission", "Bash: ./gradlew :payment:test", 11, 0],
       ["Bash", "./gradlew :payment:test", 14, 3600], ["Edit", "PaymentApprover.kt", 3, 1900], ["Bash", "./gradlew :payment:test --tests *Approver*", 9, 2400]] },
-  { id: "a7", parent: "main", name: "Refund 흐름 이관", type: "general-purpose", model: "sonnet-5-5", start: 61.4,
+  { id: "a7", parent: "main", name: "Refund 흐름 이관", type: "general-purpose", model: "sonnet-5-5", effort: "medium", start: 61.4,
     prompt: "plan.md 2단계: 환불 로직을 RefundService로 옮기고 PG 멱등키 규칙을 반영해 줘.",
     result: "RefundService 신설, Idempotency-Key 적용, 기존 테스트 전부 통과.",
     events: [["Read", "plan.md", 1.5, 900], ["Agent", "Explore · 환불 호출부 검색", 0.1, 500], ["gap", "", 17],
@@ -553,12 +583,12 @@ const SCENARIO = [
       ["Edit", "RefundController.kt", 3, 2000], ["Bash", "./gradlew :payment:compileKotlin", 8, 1500],
       ["Edit", "RefundService.kt", 3, 1800], ["Bash", "./gradlew :payment:test --tests *Refund*", 12, 2900], ["Write", "RefundServiceTest.kt", 6, 4200],
       ["Bash", "./gradlew :payment:test --tests *Refund*", 10, 2700]] },
-  { id: "a8", parent: "a7", name: "환불 호출부 검색", type: "Explore", model: "haiku-5-5", start: 63.1,
+  { id: "a8", parent: "a7", name: "환불 호출부 검색", type: "Explore", model: "haiku-5-5", effort: "low", start: 63.1,
     prompt: "refund( 를 호출하는 모든 지점을 찾아 목록으로 돌려줘.",
     result: "호출부 9곳(컨트롤러 2, 배치 3, 퍼사드 4).",
     events: [["Grep", "\\.refund\\(", 2, 1100], ["Read", "RefundController.kt", 2, 1700], ["Read", "RefundBatch.kt", 3, 2200],
       ["Grep", "cancelPayment", 2, 900], ["Read", "OrderFacade.kt", 3, 2400], ["Read", "AdminRefundFacade.kt", 2.5, 1800]] },
-  { id: "a9", parent: "main", name: "변경분 리뷰", type: "code-reviewer", model: "opus-5-5", start: 164.4,
+  { id: "a9", parent: "main", name: "변경분 리뷰", type: "code-reviewer", model: "opus-5-5", effort: "high", start: 164.4,
     prompt: "src/payment 변경분을 리뷰해 줘. 범위: 결제·환불 분리 커밋 전 diff.",
     result: "지적 2건: 멱등키 만료 처리 누락, 환불 실패 로그에 카드번호 일부 노출.",
     events: [["Bash", "git diff --stat", 1.5, 800], ["Bash", "git diff src/payment", 3, 7400], ["Read", "RefundService.kt", 3, 5400],
@@ -593,16 +623,36 @@ function demoModel() {
 /* ── 실시간 hook 이벤트 → 모델 ────────────────── */
 let rawEvents = [];
 const sessions = new Map(); // session_id → { first, last, prompt, cwd, ended }
+// 서버가 프로젝트를 못 붙인 옛 기록용: 작업 폴더 이름 (워크트리 경로는 원래 폴더로)
+const projKey = s => s?.key || "알 수 없음";
+let projectLabels = Object.create(null);
+const projectLabel = k => projectLabels[k] || String(k).split("/").filter(Boolean).pop() || k;
+const projectFromCwd = cwd => String(cwd || "").replace(/\/\.claude\/worktrees\/[^/]+.*$/, "").split("/").filter(Boolean).pop() || "알 수 없음";
+
 function indexSessions() {
   sessions.clear();
   for (const e of rawEvents) {
     if (!e.session) continue;
     let s = sessions.get(e.session);
-    if (!s) sessions.set(e.session, s = { id: e.session, first: e.ts, last: e.ts, prompt: "", cwd: e.cwd, ended: false });
+    if (!s) sessions.set(e.session, s = { id: e.session, first: e.ts, last: e.ts, lastWork: 0, prompt: "", cwd: e.cwd, ended: false, project: null, key: null, waiting: false });
+    if (!s.project && (e.project || e.cwd)) s.project = e.project || projectFromCwd(e.cwd);
+    if (e.projectRoot) s.root = e.projectRoot;   // 가장 최근 값(앞 이벤트에서 판별에 실패했어도 나중 값으로 바로잡힌다)
+    // 실제로 일한 세션만 보여 준다 (열기·재개만 하고 아무 일도 안 한 세션은 제외)
+    if (["UserPromptSubmit", "PreToolUse", "SubagentStart", "PermissionRequest"].includes(e.event)) s.active = true;
+    if (e.event === "UserPromptSubmit") s.lastWork = e.ts;   // 닫은 사무실은 새 요청이 와야 다시 나타난다
+    if (e.event === "PermissionRequest") s.waiting = true;
+    else if (e.event === "PreToolUse" || e.event === "PostToolUse" || e.event === "Stop") s.waiting = false;
     s.last = e.ts;
     if (e.event === "UserPromptSubmit" && !s.prompt) s.prompt = e.prompt;
     if (e.event === "SessionEnd") s.ended = true;
     if (e.event === "SessionStart") s.ended = false;
+  }
+  // 프로젝트 키: 저장소 전체 경로. 예전 서버의 기록(경로 없음)은 같은 이름의 경로가 하나뿐이면 그 경로로 합친다.
+  const rootsByName = new Map();
+  for (const x of sessions.values()) if (x.root && x.project) (rootsByName.get(x.project) || rootsByName.set(x.project, new Set()).get(x.project)).add(x.root);
+  for (const x of sessions.values()) {
+    const r = x.project && rootsByName.get(x.project);
+    x.key = x.root || (r && r.size === 1 ? [...r][0] : x.project) || null;
   }
 }
 
@@ -610,22 +660,40 @@ function liveModel(sid) {
   const evs = rawEvents.filter(e => e.session === sid);
   if (!evs.length) return [];
   const t0 = evs[0].ts, sec = ts => (ts - t0) / 1000;
-  const main = { id: "main", parent: null, name: "메인 세션", type: "main", model: "", start: 0, end: null,
+  // 메인은 첫 요청 전까지 '대기'(end=0). 요청이 들어오거나 도구를 쓰기 시작하면 다시 '일하는 중'이 된다.
+  const main = { id: "main", parent: null, name: "메인 세션", type: "main", model: "", start: 0, end: 0,
     failed: false, prompt: "", result: "", evs: [] };
   const list = [main], map = Object.create(null); map.main = main;
   const pendingSpawn = [];           // Agent 도구 호출 대기열 (SubagentStart와 짝지음)
   const byToolUse = {};              // tool_use_id → ev
   const spawnToSub = {};             // Agent tool_use_id → 서브에이전트 id
   const openWait = {};               // agentId → wait ev
-  const who = e => (e.agent && map[e.agent]) ? map[e.agent] : main;
+  const who = e => {
+    if (!e.agent) return main;
+    if (map[e.agent]) return map[e.agent];
+    if (e.event === "SubagentStart") return main;   // 아래 switch에서 만든다
+    // 시작 이벤트 없이 나타난 서브에이전트(web-fetch 등, 서버를 도중에 켠 경우): 첫 이벤트부터 따로 보여 준다
+    const sub = { id: e.agent, parent: "main", name: `${e.agentType || "서브에이전트"} (시작 기록 없음)`, type: e.agentType || "agent",
+      model: "", start: sec(e.ts), end: null, failed: false, prompt: "", result: "", evs: [] };
+    list.push(sub); map[e.agent] = sub;
+    return sub;
+  };
 
   for (const e of evs) {
     const t = sec(e.ts), a = who(e);
+    // 서브에이전트 시작 이벤트의 모델·effort는 메인이 아니라 새로 만들 서브에이전트 것이다(아래 switch에서 적용)
+    if (e.event !== "SubagentStart") { if (e.model) a.model = e.model; if (e.effort) a.effort = e.effort; }
+    a.lastT = t;
     if (openWait[a.id] && e.event !== "PermissionRequest") { openWait[a.id].t1 = t; delete openWait[a.id]; }
+    // 요청 이벤트 없이(서버를 작업 도중에 켠 경우) 메인이 움직이면 그 시점부터 처리 중으로 본다
+    if (a === main && main.end != null && ["PreToolUse", "PermissionRequest"].includes(e.event)) {
+      main.end = null; if (main.turnStart == null || main.turnStart < (main.lastStop ?? -1)) main.turnStart = t;
+    }
     switch (e.event) {
       case "SessionStart": if (e.model) main.model = e.model; break;
       case "UserPromptSubmit":
         if (!main.prompt) main.prompt = e.prompt;
+        main.turnStart = t;            // 지금 처리 중인 요청이 들어온 시각
         main.end = null; break;
       case "PreToolUse": {
         const ev = { tool: e.tool, arg: e.arg, t0: t, t1: null, cat: catOf(e.tool), tok: 0 };
@@ -648,9 +716,13 @@ function liveModel(sid) {
           // 서브에이전트가 뜨기 전에 실패한 Agent 호출은 대기열에서 뺀다
           const pi = pendingSpawn.findIndex(x => x.toolUseId && x.toolUseId === e.toolUseId);
           if (pi >= 0) pendingSpawn.splice(pi, 1);
-        } else {
-          const sub = map[spawnToSub[e.toolUseId]];
-          if (sub && sub.end == null) sub.end = t;
+        }
+        // Agent 도구가 끝나도 서브에이전트가 끝난 것은 아니다(백그라운드 실행은 바로 반환된다).
+        // 서브에이전트의 끝은 SubagentStop으로 판단한다. 단, TaskStop으로 강제로 멈추면 SubagentStop이 오지 않으므로
+        // 그 대상(task_id = 서브에이전트 ID)을 멈춘 시점에 끝난 것으로 본다.
+        if (e.event === "PostToolUse" && e.tool === "TaskStop") {
+          const stopped = map[e.arg];
+          if (stopped && stopped !== main && stopped.end == null) { stopped.end = t; stopped.result = "사장이 중간에 멈췄습니다."; }
         }
         break;
       }
@@ -663,8 +735,8 @@ function liveModel(sid) {
         if (i < 0) i = 0;
         const sp = pendingSpawn.splice(i, 1)[0] || {};
         const sub = { id: e.agent, parent: sp.caller || "main", name: sp.description || e.agentType || "서브에이전트",
-          type: e.agentType || sp.type || "agent", model: sp.model || e.model || "", start: t, end: null, failed: false,
-          prompt: sp.prompt || "", result: "", evs: [] };
+          type: e.agentType || sp.type || "agent", model: e.model || sp.model || "", effort: e.effort || "", start: t, end: null, failed: false,
+          prompt: sp.prompt || "", result: "", evs: [], lastT: t };
         if (sp.toolUseId) spawnToSub[sp.toolUseId] = sub.id;
         list.push(sub); map[sub.id] = sub; break;
       }
@@ -673,7 +745,7 @@ function liveModel(sid) {
         if (sub) { sub.end = t; sub.result = e.result || sub.result; }
         break;
       }
-      case "Stop": main.end = t; main.result = e.result || main.result; break;
+      case "Stop": main.end = t; main.lastStop = t; main.result = e.result || main.result; break;
       case "SessionEnd":
         for (const x of list) if (x.end == null) {
           x.end = t;
@@ -683,21 +755,34 @@ function liveModel(sid) {
         break;
     }
   }
+  // SubagentStop을 놓친 경우(서버가 꺼져 있었던 때 등): 30분 넘게 소식이 없는 서브에이전트는 마지막 활동 시점에 끝난 것으로 본다
+  const nowT = sec(Date.now());
+  // 종료 이벤트를 놓친 서브에이전트 정리. 열려 있는 것에 따라 기다리는 한도를 다르게 둔다:
+  // 승인 대기 하루, 실행 중인 도구·일하는 하위 서브에이전트 2시간, 아무것도 없으면 30분.
+  // 자식부터 판단해야 부모가 '일하는 자식'을 볼 수 있으므로 뒤에서부터 본다.
+  for (const x of [...list].reverse()) if (x !== main) {
+    // 마지막 활동 시각에는 하위 서브에이전트의 활동도 포함한다(자식이 일하는 동안 부모가 먼저 끝나지 않게)
+    const kidsList = list.filter(c => c.parent === x.id);
+    x.activeT = Math.max(x.lastT ?? x.start, ...kidsList.map(c => c.activeT ?? c.start));
+    if (x.end != null) continue;
+    const waiting = x.evs.some(ev => ev.cat === "wait" && ev.t1 == null) || kidsList.some(c => c.end == null && c.waitingOpen);
+    x.waitingOpen = waiting;
+    const tool = x.evs.some(ev => ev.t1 == null && ev.cat !== "agent" && ev.cat !== "wait");
+    const kids = kidsList.some(c => c.end == null);
+    const limit = waiting ? STALE_S : tool || kids ? 7200 : 1800;
+    if (nowT - x.activeT > limit) x.end = x.activeT;
+  }
+  for (const x of list) if (x !== main && !x.model && main.model) { x.model = main.model; x.modelInherited = true; }
   const s = sessions.get(sid);
   main.name = s?.prompt ? s.prompt.slice(0, 40) + (s.prompt.length > 40 ? "…" : "") : "메인 세션";
   return list;
 }
 
 /* ── 트리 순서 ────────────────────────────── */
+let modelVersion = 0;
 function setModel(list) {
-  agents = list;
-  byId = Object.assign(Object.create(null), Object.fromEntries(agents.map(a => [a.id, a])));
-  order = [];
-  (function walk(pid, depth) {
-    agents.filter(a => a.parent === pid).sort((x, y) => x.start - y.start)
-      .forEach(a => { a.depth = depth; order.push(a); walk(a.id, depth + 1); });
-  })(null, 0);
-  order.forEach((a, i) => a.idx = i);
+  ({ agents, byId, order } = treeOf(list));
+  modelVersion++;   // 새 객체에는 화면 요소가 붙어 있지 않으므로 줄을 다시 만든다
   if (!byId[state.sel]) state.sel = "main";
 }
 
@@ -714,6 +799,38 @@ const fmt = s => {
   const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = String(s % 60).padStart(2, "0");
   return h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
 };
+// "claude-opus-5-5" → "Opus 5.5", 날짜 꼬리표 제거
+const prettyModel = m => {
+  if (!m) return "";
+  const x = String(m).replace(/^(?:[a-z-]{2,8}\.)?(?:anthropic\.)?claude-/, "").replace(/(?:@\d+|-v\d+(?::\d+)?|-\d{8})+$/, "").match(/^(opus|sonnet|haiku|fable)-(\d+)(?:-(\d+))?/i);
+  return x ? `${x[1][0].toUpperCase()}${x[1].slice(1)} ${x[2]}${x[3] ? "." + x[3] : ""}` : String(m);
+};
+const agoText = sec => sec < 60 ? "방금" : sec < 3600 ? `${Math.floor(sec / 60)}분 전` : sec < 86400 ? `${Math.floor(sec / 3600)}시간 전` : `${Math.floor(sec / 86400)}일 전`;
+const AWAY_S = 600, STALE_S = 86400;     // 응답 후 10분 무활동 = 자리 비움, 하루 무활동 = 오래됨
+// 위쪽 큰 시계: 일하는 중이면 지금 요청의 처리 시간, 쉬는 중이면 마지막 활동, 끝났으면 총 시간
+function sessionClock(t) {
+  if (state.mode === "demo") return { label: "경과", value: fmt(t) };
+  return sessionClockFor(sessions.get(liveSid), byId.main, t, order.filter(a => a.id !== "main"));
+}
+function sessionClockFor(s, m, t, subs = []) {
+  if (!s || !m) return { label: "", value: "-" };
+  const idle = (Date.now() - s.last) / 1000;
+  if (s.ended) return { label: "종료", value: `총 ${fmt((s.last - s.first) / 1000)}`, ended: true };
+  const st = statusAt(m, t);
+  const working = subs.filter(a => ["running", "waiting"].includes(statusAt(a, t)));
+  const subWaiting = working.some(a => statusAt(a, t) === "waiting");
+  const mainBusy = st === "running" || st === "waiting";
+  if (idle < STALE_S && (mainBusy || working.length)) {
+    const turn = mainBusy ? t - (m.turnStart ?? 0) : null;
+    const value = fmt(turn ?? (t - Math.min(...working.map(a => a.start))));
+    const extra = turn != null ? { turn } : { awaiting: working.length };
+    // 메인이든 서브에이전트든 하나라도 승인을 기다리면 '승인 대기'
+    if (st === "waiting" || subWaiting) return { label: "승인 대기", value, ...extra };
+    if (mainBusy) return { label: "처리 중", value, turn };
+    return { label: `보고 대기 ${working.length}명`, value, awaiting: working.length };   // 메인은 응답을 끝냈지만 직원이 아직 일하는 중
+  }
+  return { label: idle >= STALE_S ? "오래됨" : "대기 중", value: agoText(idle), away: idle >= AWAY_S, stale: idle >= STALE_S };
+}
 const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1) + "k" : String(n);
 const pct = t => (t / state.total) * 100 + "%";
 const STEPS = [10, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200];
@@ -733,7 +850,7 @@ function buildRows() {
     row.style.setProperty("--depth", a.depth);
     row.innerHTML = `
       <div class="label">${a.depth ? TREE_SVG : ""}<span class="dot"></span>
-        <span class="txt"><span class="name" title="${esc(a.name)}">${esc(a.name)}</span><span class="meta">${esc(a.type)}${a.model ? " · " + esc(a.model) : ""} · <span class="st"></span></span></span>
+        <span class="txt"><span class="name" title="${esc(a.name)}">${esc(a.name)}</span><span class="meta">${esc(a.type)}${a.model ? " · " + esc(prettyModel(a.model)) : ""}${a.effort ? " · " + esc(a.effort) : ""} · <span class="st"></span></span></span>
       </div>
       <div class="track"><div class="life"></div><div class="end-mark"></div></div>`;
     a.el = { row, track: row.querySelector(".track"), life: row.querySelector(".life"), st: row.querySelector(".st"), end: row.querySelector(".end-mark") };
@@ -834,7 +951,7 @@ function renderDetail() {
     <div class="d-head">
       <span class="d-status st-${st}"><span class="dot"></span>${STATUS_TEXT[st]}</span>
       <h2>${esc(a.name)}</h2>
-      <div class="sub">${esc(a.type)}${a.model ? " · " + esc(a.model) : ""}${a.parent && byId[a.parent] ? ` · 상위: ${esc(byId[a.parent].name)}` : ""}</div>
+      <div class="sub">${esc(a.type)}${a.model ? " · " + esc(prettyModel(a.model)) : ""}${a.effort ? " · " + esc(a.effort) : ""}${a.parent && byId[a.parent] ? ` · 상위: ${esc(byId[a.parent].name)}` : ""}</div>
       <dl class="facts">${factsHtml}</dl>
     </div>
     <div class="d-body">
@@ -849,7 +966,8 @@ function renderDetail() {
 
 /* ── 프레임 갱신 ─────────────────────────── */
 function render() {
-  const key = order.map(a => a.id + ":" + (a.parent || "")).join(",") + "|" + state.mode;
+  // 세션이 바뀌면 에이전트 ID가 같아도(둘 다 main만 있는 경우 등) 줄을 새로 만든다
+  const key = order.map(a => a.id + ":" + (a.parent || "")).join(",") + "|" + state.mode + "|" + (liveSid || "") + "|" + modelVersion;
   if (key !== structureKey) { structureKey = key; buildRows(); }
   buildTicks();
   const t = state.t, counts = { running: 0, waiting: 0, done: 0, failed: 0 };
@@ -877,7 +995,8 @@ function render() {
     if (a.el.link) { a.el.link.style.display = t >= a.start ? "" : "none"; a.el.link.style.left = pct(a.start); }
   }
   for (const k in counts) document.getElementById("n-" + k).textContent = counts[k];
-  $("#clock").textContent = fmt(t);
+  const ck = sessionClock(t), ckHtml = ck.label ? `<small>${ck.label}</small>${esc(ck.value)}` : esc(ck.value);
+  const ckEl = $("#clock"); if (ckEl.innerHTML !== ckHtml) ckEl.innerHTML = ckHtml;
   now.style.left = pct(t); now.firstChild.textContent = fmt(t);
   now.style.display = (state.mode === "demo" && t >= state.total) || !order.length ? "none" : "";
   renderDetail();
@@ -907,31 +1026,98 @@ document.addEventListener("keydown", e => {
 });
 
 /* ── 실시간 모드 ─────────────────────────── */
-let liveSid = null, followLatest = true, dirty = true;
+let lastRebuiltSid = null;
+let pinnedSid = null, wantApplied = false, historyLoaded = false;   // 드롭다운으로 직접 고른 세션 (고르지 않으면 사무실마다 가장 급한 세션을 자동으로 보여 준다)
+let liveSid = null, followLatest = true, dirty = true, liveProject = null, followProject = true;
 const sel = $("#session-select");
-sel.onchange = () => { liveSid = sel.value; followLatest = sel.selectedIndex === 0; state.sel = "main"; dirty = true; };
+sel.onchange = () => {
+  const s = sessions.get(sel.value);
+  pinnedSid = s ? s.id : null;          // '자동'을 고르면 고정을 푼다
+  if (s) { liveProject = projKey(s); followProject = false; }
+  state.sel = "main"; dirty = true; liveTick();
+  if (state.view === "office") scrollToProject(liveProject);
+};
 
+// 프로젝트 목록: 최근 활동 순. 실제로 일한 세션이 있는 프로젝트만.
+function refreshProjects() {
+  const all = [...sessions.values()].filter(s => s.active);
+  const byProject = new Map();
+  for (const s of all) {
+    const k = projKey(s);
+    const g = byProject.get(k) || { name: k, base: s.project || projectLabel(k), last: 0, lastWork: 0 };
+    g.last = Math.max(g.last, s.last); g.lastWork = Math.max(g.lastWork, s.lastWork);
+    byProject.set(k, g);
+  }
+  // 표시 이름: 같은 이름의 저장소가 여러 곳에 있으면 상위 폴더 이름을 붙여 구분한다
+  const nameCount = {};
+  for (const g of byProject.values()) nameCount[g.base] = (nameCount[g.base] || 0) + 1;
+  projectLabels = Object.create(null);
+  for (const g of byProject.values()) {
+    const parent = String(g.name).split("/").filter(Boolean).slice(-2, -1)[0];
+    projectLabels[g.name] = nameCount[g.base] > 1 && parent ? `${parent}/${g.base}` : g.base;
+  }
+  // 닫은 사무실: 닫은 뒤 새로 일을 시작하지 않으면 숨기고, 새 일을 시작하면 다시 보여 준다(알림·종료만으로는 안 나타남)
+  let changed = false;
+  if (historyLoaded) for (const [name, at] of Object.entries(hiddenProjects)) {
+    const g = byProject.get(name);
+    if (!g || g.lastWork > at) { delete hiddenProjects[name]; changed = true; }
+  }
+  if (changed) saveHidden();
+  const allGroups = [...byProject.values()].sort((a, b) => b.last - a.last);
+  const groups = allGroups.filter(g => !(g.name in hiddenProjects));
+  if (liveProject && liveProject in hiddenProjects) { liveProject = null; followProject = true; }
+  const want = q.get("project");
+  const wanted = want && [...byProject.keys()].find(k => k === want || projectLabels[k] === want);
+  if (wanted && followProject && !(wanted in hiddenProjects)) { liveProject = wanted; followProject = false; }
+  if ((followProject || !byProject.has(liveProject) || liveProject in hiddenProjects) && groups[0]) liveProject = groups[0].name;
+  visibleGroups = groups;
+}
+// 프로젝트 이름이 constructor 같은 키여도 문제없도록 프로토타입 없는 객체를 쓴다
+let hiddenProjects = Object.create(null), visibleGroups = [];
+try { Object.assign(hiddenProjects, JSON.parse(localStorage.getItem("monitor.hiddenProjects.v2") || "{}") || {}); } catch {}
+const saveHidden = () => { try { localStorage.setItem("monitor.hiddenProjects.v2", JSON.stringify(hiddenProjects)); } catch {} };
+function closeProject(name) {
+  const last = Math.max(0, ...[...sessions.values()].filter(x => projKey(x) === name).map(x => x.lastWork));
+  hiddenProjects[name] = last; saveHidden();
+  if (pinnedSid && projKey(sessions.get(pinnedSid)) === name) pinnedSid = null;
+  if (liveProject === name) { liveProject = null; followProject = true; state.sel = "main"; }
+  dirty = true; liveTick();
+}
+// 세션 드롭다운: 닫지 않은 모든 프로젝트의 세션. 고르면 그 프로젝트가 선택된다.
 function refreshSessionList() {
-  const list = [...sessions.values()].sort((a, b) => b.last - a.last);
-  const want = q.get("session");
-  if (want && followLatest) { const m = list.find(s => s.id.startsWith(want)); if (m) { liveSid = m.id; followLatest = false; } }
-  if (followLatest && list[0]) liveSid = list[0].id;
-  const html = list.map(s => {
+  const all = [...sessions.values()].filter(s => s.active && !(projKey(s) in hiddenProjects)).sort((a, b) => b.last - a.last);
+  const html = `<option value=""${pinnedSid ? "" : " selected"}>자동 · 프로젝트마다 가장 급한 세션</option>` + all.map(s => {
     const when = new Date(s.first).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
-    const label = `${when} · ${String(s.prompt || "(프롬프트 없음)").slice(0, 34)}${s.ended ? " · 종료" : ""}`;
-    return `<option value="${esc(s.id)}"${s.id === liveSid ? " selected" : ""}>${esc(label)}</option>`;
+    const stale = !s.ended && Date.now() - s.last > STALE_S * 1000;
+    const label = `${projectLabel(projKey(s))} · ${when} · ${String(s.prompt || "(프롬프트 없음)").slice(0, 30)}${s.ended ? " · 종료" : stale ? " · 오래됨" : ""}`;
+    return `<option value="${esc(s.id)}"${s.id === pinnedSid ? " selected" : ""}>${esc(label)}</option>`;
   }).join("");
   if (sel.innerHTML !== html) sel.innerHTML = html;
 }
 
+let lastRebuildAt = 0;
 function liveRebuild() {
-  indexSessions(); refreshSessionList();
+  lastRebuildAt = Date.now();
+  indexSessions(); refreshProjects();
+  if (pinnedSid && (!sessions.has(pinnedSid) || projKey(sessions.get(pinnedSid)) in hiddenProjects)) pinnedSid = null;
+  const want = q.get("session");
+  if (want && !wantApplied) { const m = [...sessions.values()].find(x => x.id.startsWith(want)); if (m) { pinnedSid = m.id; liveProject = projKey(m); followProject = false; wantApplied = true; } }
+  syncOffices(visibleGroups);
+  // 상세 패널·타임라인: 고정한 세션 > 선택한 사무실이 보여 주는 세션 > 맨 위 사무실
+  if (pinnedSid) { liveSid = pinnedSid; liveProject = projKey(sessions.get(pinnedSid)); }
+  else {
+    const top = stackEl.firstElementChild?.dataset.key;
+    if ((followProject || !offices.has(liveProject)) && top) liveProject = top;
+    liveSid = offices.get(liveProject)?.sid ?? null;
+  }
+  refreshSessionList();
   const s = sessions.get(liveSid);
   setModel(liveSid ? liveModel(liveSid) : []);
   if (s) {
     $("#title").textContent = s.prompt ? s.prompt.slice(0, 60) : "Claude Code 세션";
-    $("#subtitle").textContent = `세션 ${s.id.slice(0, 8)} · ${s.cwd || ""}`;
+    $("#subtitle").textContent = `${projectLabel(projKey(s))} · 세션 ${s.id.slice(0, 8)} · ${s.cwd || ""}`;
   }
+  if (liveSid !== lastRebuiltSid) { lastRebuiltSid = liveSid; lastDetailKey = ""; }
   dirty = false;
 }
 
@@ -947,11 +1133,11 @@ function startLive() {
   $("#title").textContent = "Claude Code 세션"; $("#subtitle").textContent = "hook 이벤트 대기 중";
   setModel([]); render();
   if (q.get("snapshot") === "1") {   // 화면 캡처·디버그용: 한 번만 받아서 그린다
-    fetch("/events").then(r => r.json()).then(list => { rawEvents = list; setTag("live"); liveTick(); });
+    fetch("/events").then(r => r.json()).then(list => { rawEvents = list; historyLoaded = true; dirty = true; setTag("live"); liveTick(); });
     return;
   }
   const es = new EventSource("/events/stream");
-  es.addEventListener("history", m => { rawEvents = JSON.parse(m.data); dirty = true; setTag("live"); });
+  es.addEventListener("history", m => { rawEvents = JSON.parse(m.data); historyLoaded = true; dirty = true; setTag("live"); });
   es.onmessage = m => {
     const e = JSON.parse(m.data);
     if (e.event === "__clear") rawEvents = []; else rawEvents.push(e);
@@ -977,17 +1163,20 @@ function frame(ts) {
 }
 // 실시간 모드는 rAF가 멈추는 백그라운드 탭에서도 갱신되도록 타이머로 돈다
 function liveTick() {
+  // 새 이벤트가 없어도 1분마다 다시 계산한다(오래 조용한 서브에이전트 정리, 자리 비움 판정)
+  if (Date.now() - lastRebuildAt > 60000) dirty = true;
   if (dirty) liveRebuild();
   const s = sessions.get(liveSid);
   const endTs = s && s.ended ? s.last : Date.now();
   state.t = s ? (endTs - s.first) / 1000 : 0;
   state.total = Math.max(60, state.t * 1.06 + 5);
+  arrangeOffices();   // 사무실 시간·정렬은 타임라인 그리기와 상관없이 먼저 갱신한다
   render();
 }
 
 
 /* ── 오피스 뷰: 사무실 ───────────────────────────
-   왼쪽 사장실에 사장(메인 세션)이 있고, 오른쪽에 에이전트 유형별 개인 방(3×2)이 있다.
+   프로젝트마다 사무실이 하나씩 있다. 왼쪽 사장실에 사장(메인 세션)이 있고, 오른쪽에 에이전트 유형별 개인 방(3×2)이 있다.
    평소에는 직원이 자기 방 책상에서 쉬고(월급루팡), 사장이 일감을 주면(Agent 호출)
    복도를 지나 사장실로 가서 일을 받고, 자기 자리로 돌아와 일한다.
    끝나면 사장에게 보고하러 갔다가 자리로 돌아온다. 같은 유형이 동시에 여러 개면 옆자리에 추가 인원이 앉는다. */
@@ -1045,16 +1234,18 @@ const GLYPH = {
 function roomSvg(i) {
   const r = roomRect(i), top = r.row === 0;
   const dx = r.x + DOOR_DX;
-  return `<g class="room vacant" id="room-${i}" data-room="${i}">
+  return `<g class="room vacant" data-k="room-${i}" data-room="${i}">
     <rect class="room-box" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="14"/>
     <rect class="room-rug" x="${r.x + 22}" y="${top ? r.y + 150 : r.y + 156}" width="${r.w - 74}" height="58" rx="10"/>
     <rect class="room-door" x="${dx - 22}" y="${top ? r.y + r.h - 3 : r.y - 3}" width="44" height="6" rx="2"/>
     <circle class="room-lamp" cx="${r.x + r.w - 20}" cy="${r.y + 22}" r="5"/>
-    <text class="plate-name" id="room-name-${i}" x="${r.x + 18}" y="${r.y + 30}"></text>
-    <text class="plate-no" id="room-role-${i}" x="${r.x + 18}" y="${r.y + 49}"></text>
+    <text class="room-timer" data-k="room-timer-${i}" x="${r.x + r.w - 20}" y="${r.y + 74}" text-anchor="end"></text>
+    <text class="room-model" data-k="room-model-${i}" x="${r.x + r.w - 18}" y="${r.y + 49}" text-anchor="end"></text>
+    <text class="plate-name" data-k="room-name-${i}" x="${r.x + 18}" y="${r.y + 30}"></text>
+    <text class="plate-no" data-k="room-role-${i}" x="${r.x + 18}" y="${r.y + 49}"></text>
     <g class="room-status" transform="translate(${r.x + 18} ${r.y + 74})">
-      <g id="room-icon-${i}" transform="translate(7 -4)"></g>
-      <text id="room-status-${i}" x="20" y="0"></text>
+      <g data-k="room-icon-${i}" transform="translate(7 -4)"></g>
+      <text data-k="room-status-${i}" x="20" y="0"></text>
     </g>
     <g class="furniture">
       <rect x="${r.x + r.w - 40}" y="${r.y + 96}" width="22" height="30" rx="4" fill="#e9ecf1"/>
@@ -1068,7 +1259,7 @@ function deskSvg(i) {
   return `<g class="desk">
     <rect x="${r.x + 26}" y="${y}" width="${r.w - 82}" height="11" rx="4" fill="#c9a77f"/>
     <rect x="${r.x + 32}" y="${y + 11}" width="${r.w - 94}" height="20" rx="3" fill="#b89470"/>
-    ${[0, 1, 2].map(k => { const sx = r.x + SEAT_DX[k]; return `<g class="laptop" id="laptop-${i}-${k}"><rect x="${sx - 13}" y="${y - 13}" width="26" height="14" rx="2" class="room-screen"/><rect x="${sx - 16}" y="${y - 1}" width="32" height="3" rx="1.5" fill="#8a93a3"/></g>`; }).join("")}
+    ${[0, 1, 2].map(k => { const sx = r.x + SEAT_DX[k]; return `<g class="laptop" data-k="laptop-${i}-${k}"><rect x="${sx - 13}" y="${y - 13}" width="26" height="14" rx="2" class="room-screen"/><rect x="${sx - 16}" y="${y - 1}" width="32" height="3" rx="1.5" fill="#8a93a3"/></g>`; }).join("")}
   </g>`;
 }
 
@@ -1081,15 +1272,16 @@ const SCENE = `
 <rect x="${BOSS_ROOM.x}" y="${BOSS_ROOM.y}" width="${BOSS_ROOM.w}" height="${BOSS_ROOM.h}" rx="16" fill="#fbf8f2" stroke="#e6dfd2" stroke-width="1.5"/>
 <rect x="${BOSS_DOOR_X - 3}" y="${CORR - 22}" width="6" height="44" fill="#e2e6ec"/>
 <text x="40" y="56" class="agency-sign">사장실</text>
+<text x="40" y="78" class="boss-model" data-k="boss-model"></text>
 <g><circle cx="276" cy="50" r="16" fill="#fff" stroke="#d6cfc2" stroke-width="2"/>
-  <line id="clock-m" x1="276" y1="50" x2="276" y2="40" stroke="#2a3344" stroke-width="2.4" stroke-linecap="round"/>
-  <line id="clock-s" x1="276" y1="50" x2="276" y2="38" stroke="#c23b32" stroke-width="1.2" stroke-linecap="round"/>
-  <text x="250" y="54" text-anchor="end" class="clock-label" id="office-clock">0:00</text></g>
+  <line data-k="clock-m" x1="276" y1="50" x2="276" y2="40" stroke="#2a3344" stroke-width="2.4" stroke-linecap="round"/>
+  <line data-k="clock-s" x1="276" y1="50" x2="276" y2="38" stroke="#c23b32" stroke-width="1.2" stroke-linecap="round"/>
+  <text x="250" y="54" text-anchor="end" class="clock-label" data-k="office-clock">0:00</text></g>
 <rect x="${BOSS.x - 76}" y="${RECEIVE.y - 18}" width="152" height="40" rx="12" fill="#f3ede2"/>
 <g transform="translate(46 430)"><rect x="-14" y="10" width="28" height="36" rx="5" fill="#e6dfd2"/><circle r="17" fill="#9cc7a4"/><circle cx="-9" cy="-9" r="11" fill="#b7d8bd"/></g>
 ${[...Array(6)].map((_, i) => roomSvg(i)).join("")}
-<g id="crew"></g>
-<g id="front" pointer-events="none">
+<g data-k="crew"></g>
+<g data-k="front" pointer-events="none">
   <g class="boss-desk">
     <rect x="${BOSS.x - 58}" y="${BOSS.y - 22}" width="116" height="12" rx="4" fill="#8b6a4b"/>
     <rect x="${BOSS.x - 52}" y="${BOSS.y - 10}" width="104" height="30" rx="3" fill="#7a5b3f"/>
@@ -1099,27 +1291,10 @@ ${[...Array(6)].map((_, i) => roomSvg(i)).join("")}
   </g>
   ${[...Array(6)].map((_, i) => deskSvg(i)).join("")}
 </g>
-<g id="crew-top"></g>
-<g id="boss-chip" transform="translate(${BOSS.x} 122)"><rect class="chip-bg" x="-80" y="-15" width="160" height="28" rx="14"/><text class="chip-text" text-anchor="middle" y="4"></text></g>`;
+<g data-k="crew-top"></g>
+<g class="boss-chip" transform="translate(${BOSS.x} 122)"><rect class="chip-bg" data-k="chip-bg" x="-80" y="-15" width="160" height="28" rx="14"/><text class="chip-text" data-k="chip-text" text-anchor="middle" y="4"></text></g>`;
 
-const office = { built: false, figs: {}, instFig: {}, closed: new Set(), last: performance.now(), lastT: 0, roomKey: [], pop: null, popKey: "" };
-
-function buildOffice() {
-  document.getElementById("office-svg").innerHTML = SCENE;
-  Object.assign(office, { built: true, figs: {}, instFig: {}, roomKey: [] });
-  document.querySelectorAll("#office-svg .room").forEach(el => el.addEventListener("click", e => {
-    e.stopPropagation();
-    const ty = office.roomTypes?.[+el.dataset.room];
-    if (ty) openPop("room", ty);
-  }));
-}
-
-function makeFigure(key, color, isMain, onPick) {
-  const g = document.createElementNS(SVGNS, "g");
-  g.setAttribute("class", "worker");
-  g.setAttribute("tabindex", "0");
-  g.setAttribute("role", "button");
-  g.innerHTML = `
+const FIGURE_SVG = (color, isMain) => `
     <ellipse class="shadow" cx="0" cy="1" rx="15" ry="3.5"/>
     <g class="fig"><g class="bobber">
       <g class="legs"><rect class="leg l" x="-7" y="-20" width="6" height="20" rx="3"/><rect class="leg r" x="1" y="-20" width="6" height="20" rx="3"/></g>
@@ -1139,12 +1314,6 @@ function makeFigure(key, color, isMain, onPick) {
     <g class="mark" transform="translate(0 -90)"><circle r="9"/><g class="mark-glyph"></g></g>
     <text class="name" y="17" text-anchor="middle"></text>
     <rect class="ring" x="-22" y="-82" width="44" height="106" rx="12"/>`;
-  const pick = e => { e.stopPropagation(); onPick(); };
-  g.addEventListener("click", pick);
-  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(e); } });
-  document.getElementById("crew").appendChild(g);
-  return { g, x: 0, y: 0, flip: 1, mark: undefined, label: undefined, cls: "" };
-}
 
 const shortArg = (s, n = 16) => { s = String(s || "").split("/").pop(); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
 
@@ -1208,96 +1377,6 @@ function setLabel(f, label, aria) {
   if (f.label !== label) { f.label = label; f.g.querySelector(".name").textContent = label; }
   f.g.setAttribute("aria-label", aria);
 }
-function place(f, cls, onTop = false) {
-  if (f.cls !== cls) { f.g.setAttribute("class", cls); f.cls = cls; }
-  // 자리에 앉아 있을 때만 책상 뒤에, 걷거나 서 있을 때는 책상·가구보다 앞에 그린다
-  const layer = document.getElementById(onTop ? "crew-top" : "crew");
-  if (f.g.parentNode !== layer) layer.appendChild(f.g);
-  f.g.setAttribute("transform", `translate(${f.x.toFixed(1)} ${f.y.toFixed(1)})`);
-  f.g.querySelector(".fig").setAttribute("transform", `scale(${f.flip} 1)`);
-}
-
-/* ── 카드 ─────────────────────────────────── */
-function openPop(kind, id) { office.pop = { kind, id }; office.popKey = ""; if (kind === "agent" || kind === "boss") select(kind === "boss" ? "main" : id); }
-function closePop() { office.pop = null; office.popKey = ""; $("#office-pop").hidden = true; }
-
-function popHtml(t) {
-  const p = office.pop;
-  const pill = st => `<span class="pop-st st-${st}"><span class="dot"></span>${STATUS_TEXT[st]}</span>`;
-  const recent = a => a.evs.filter(e => e.t0 <= t && e.cat !== "agent").slice(-3).reverse()
-    .map(e => `<li><i style="background:${CAT_COLOR[e.cat]}"></i><b>${esc(e.cat === "wait" ? "승인 대기" : e.tool)}</b><span>${esc(shortArg(e.arg, 30))}</span><time>${fmt(e.t0)}</time></li>`).join("");
-  const nowSec = w => `<section class="pop-now st-${w.st}"><h4>지금 하는 일</h4><p><i style="background:${w.cat ? CAT_COLOR[w.cat] || "#8a93a3" : "transparent"}"></i>${esc(w.title)}${w.since != null ? ` <time>${w.since.toFixed(0)}초째</time>` : ""}</p>${w.detail ? `<p class="mono">${esc(w.detail.length > 160 ? w.detail.slice(0, 159) + "…" : w.detail)}</p>` : ""}</section>`;
-  if (p.kind === "agent") {
-    const a = byId[p.id]; if (!a) return null;
-    const w = currentWork(a, t);
-    const elapsed = Math.min(t, a.end ?? t) - a.start;
-    return `<header><i class="sw-type" style="background:${typeColor(a.type)}"></i><div><strong>${esc(a.type)}</strong><span>${a.model ? esc(a.model) + " · " : ""}경과 ${fmt(elapsed)}</span></div>${pill(w.st)}</header>
-      <section><h4>역할</h4><p>${esc(roleOf(a.type))}</p></section>
-      <section><h4>맡은 일</h4><p class="task">${esc(a.name)}</p>${a.prompt ? `<p class="sub">${esc(a.prompt.length > 140 ? a.prompt.slice(0, 139) + "…" : a.prompt)}</p>` : ""}</section>
-      ${nowSec(w)}
-      ${a.evs.length ? `<section><h4>최근 작업</h4><ul class="recent">${recent(a)}</ul></section>` : ""}
-      <footer><button class="btn" data-act="detail">전체 기록 보기</button></footer>`;
-  }
-  if (p.kind === "room") {
-    const ty = p.id;
-    return `<header><i class="sw-type" style="background:${typeColor(ty)}"></i><div><strong>${esc(ty)}</strong><span>${esc(shortType(ty))} 담당 방</span></div><span class="pop-st"><span class="dot"></span>월급루팡 중</span></header>
-      <section><h4>역할</h4><p>${esc(roleOf(ty))}</p></section>
-      <section><h4>지금 하는 일</h4><p class="sub">맡은 일이 없어 자리에서 쉬고 있습니다. 사장이 이 유형으로 일감을 주면 사장실로 가서 일을 받고 자리로 돌아와 일합니다.</p></section>`;
-  }
-  if (p.kind === "boss") {
-    const a = byId.main; if (!a) return null;
-    const w = currentWork(a, t);
-    return `<header><i class="sw-type" style="background:${typeColor("main")}"></i><div><strong>사장 · 메인 세션</strong><span>${a.model ? esc(a.model) + " · " : ""}경과 ${fmt(Math.min(t, a.end ?? t))}</span></div>${pill(w.st)}</header>
-      <section><h4>역할</h4><p>${esc(ROLE_DESC.main)}</p></section>
-      ${a.prompt ? `<section><h4>받은 요청</h4><p class="sub">${esc(a.prompt.length > 160 ? a.prompt.slice(0, 159) + "…" : a.prompt)}</p></section>` : ""}
-      ${nowSec(w)}
-      <footer><button class="btn" data-act="detail">전체 기록 보기</button></footer>`;
-  }
-  return null;
-}
-
-function renderPop(t) {
-  const el = $("#office-pop");
-  if (!office.pop) { el.hidden = true; return; }
-  const p = office.pop;
-  let key;
-  if (p.kind === "room") key = `room|${p.id}`;
-  else {
-    const a = byId[p.kind === "boss" ? "main" : p.id];
-    if (!a) { closePop(); return; }
-    const w = currentWork(a, t);
-    key = `${p.kind}|${a.id}|${w.st}|${w.title}|${w.detail}|${a.evs.length}|${Math.floor(t)}`;
-  }
-  if (key !== office.popKey) {
-    office.popKey = key;
-    const html = popHtml(t);
-    if (!html) { closePop(); return; }
-    el.innerHTML = html;
-  }
-  el.hidden = false;
-  // 누른 대상 근처에 띄운다
-  let anchor = null;
-  if (p.kind === "boss") anchor = { x: BOSS.x, y: BOSS.y + 64 };
-  else if (p.kind === "agent") { const f = office.instFig[p.id]; if (f) anchor = { x: f.x, y: f.y + 24 }; }
-  else { const i = office.roomTypes.indexOf(p.id); if (i >= 0) { const r = roomRect(i); anchor = { x: r.x + r.w / 2, y: r.y + r.h - 6 }; } }
-  const svg = $("#office-svg"), box = $("#office").getBoundingClientRect();
-  if (anchor && svg.getScreenCTM()) {
-    const pt = svg.createSVGPoint(); pt.x = anchor.x; pt.y = anchor.y;
-    const sp = pt.matrixTransform(svg.getScreenCTM());
-    const pw = el.offsetWidth;
-    const left = Math.max(8, Math.min(box.width - pw - 8, sp.x - box.left - pw / 2));
-    el.style.left = left + "px"; el.style.top = (sp.y - box.top + $("#office").scrollTop + 8) + "px";
-  }
-}
-
-$("#office-pop").addEventListener("click", e => {
-  e.stopPropagation();
-  if (e.target.closest("[data-act=detail]")) { select(office.pop.kind === "boss" ? "main" : office.pop.id); }
-});
-$("#office").addEventListener("click", () => closePop());
-document.addEventListener("keydown", e => { if (e.key === "Escape" && office.pop) closePop(); });
-
-/* ── 프레임 ───────────────────────────────── */
 function phraseFor(f, a, t) {
   switch (f.phase) {
     case "toBoss": return { text: "사장님 호출받고 가는 중", cat: "agent" };
@@ -1313,54 +1392,364 @@ function phraseFor(f, a, t) {
   return { text: `${WORK_PHRASE[w.cat] || "작업 중"} · ${shortArg(w.detail, 14)}`, cat: w.cat };
 }
 
-function officeFrame(now) {
-  const dt = Math.max(0, Math.min(0.1, (now - office.last) / 1000)); office.last = now;
-  if (state.view !== "office") return;
-  if (!office.built) buildOffice();
-  const t = state.t;
+/* ── 사무실 여러 개: 프로젝트마다 하나씩 위아래로 쌓는다 ──────────────
+   각 사무실(O)은 자기 세션, 모델, 직원, 방 상태를 따로 가진다.
+   순서는 처음 나타난 순서로 고정하고, 펼침·접힘은 처음 나타날 때만 정한다(그 뒤에는 사용자가 누를 때만). */
+let officeSeq = 0;
+const offices = new Map();          // 프로젝트 이름(데모는 "__demo") → 사무실
+const overrides = Object.create(null);               // 프로젝트 → "open" | "closed" (사용자가 직접 펼치거나 접은 것)
+let pop = null, popKey = "", initPop = null;
+const stackEl = $("#office-stack");
+
+function treeOf(list) {
+  const byId = Object.assign(Object.create(null), Object.fromEntries(list.map(a => [a.id, a])));
+  const order = [];
+  (function walk(pid, depth) {
+    list.filter(a => a.parent === pid).sort((x, y) => x.start - y.start)
+      .forEach(a => { a.depth = depth; order.push(a); walk(a.id, depth + 1); });
+  })(null, 0);
+  order.forEach((a, i) => a.idx = i);
+  return { agents: list, byId, order };
+}
+
+const CHEV = `<svg class="osec-chev" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>`;
+function createOffice(key) {
+  const sec = document.createElement("section");
+  sec.className = "osec"; sec.dataset.key = key;
+  sec.innerHTML = `
+    <header class="osec-head" role="button" tabindex="0" aria-expanded="true">
+      <span class="pdot"></span>
+      <strong class="osec-name"></strong>
+      <span class="osec-st"></span>
+      <span class="osec-meta"></span>
+      <span class="osec-prompt"></span>
+      <div class="seg osec-view" role="group" aria-label="보기 전환">
+        <button type="button" data-v="office" aria-pressed="true">오피스</button>
+        <button type="button" data-v="timeline" aria-pressed="false">타임라인</button>
+      </div>
+      <button class="osec-close" type="button" title="사무실 닫기 (이 프로젝트에서 새로 일을 시작하면 다시 나타납니다)"><svg viewBox="0 0 12 12" width="11" height="11"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      ${CHEV}
+    </header>
+    <div class="osec-body"><svg class="office-svg" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMin meet" role="img"></svg></div>`;
+  const O = { key, sec, svg: sec.querySelector(".office-svg"), ref: {}, figs: {}, instFig: {}, closed: new Set(),
+    lastT: 0, roomKey: [], built: false, last: performance.now(), expanded: null, m: treeOf([]), t: 0, seq: ++officeSeq, view: "office" };
+  O.$ = k => O.ref[k] || (O.ref[k] = O.svg.querySelector(`[data-k="${k}"]`));
+  const head = sec.querySelector(".osec-head");
+  const toggle = () => {
+    O.expanded = !O.expanded;
+    if (O.project) overrides[O.project] = O.expanded ? "open" : "closed";
+    if (O.expanded) { O.built = false; focusOffice(O); }
+    if (pop?.O === O && !O.expanded) closePop();
+    updateHeader(O);
+  };
+  sec.querySelectorAll(".osec-view button").forEach(b => {
+    b.addEventListener("click", e => { e.stopPropagation(); setOfficeView(O, b.dataset.v); });
+    b.addEventListener("keydown", e => e.stopPropagation());
+  });
+  const closeBtn = sec.querySelector(".osec-close");
+  if (key === "__demo") closeBtn.hidden = true;
+  closeBtn.addEventListener("click", e => { e.stopPropagation(); if (O.project) closeProject(O.project); });
+  closeBtn.addEventListener("keydown", e => e.stopPropagation());
+  head.addEventListener("click", e => { e.stopPropagation(); toggle(); });
+  head.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+  offices.set(key, O);
+  return O;
+}
+
+function buildOffice(O) {
+  O.svg.innerHTML = SCENE;
+  Object.assign(O, { ref: {}, figs: {}, instFig: {}, roomKey: [], built: true });
+  O.svg.setAttribute("aria-label", `${O.project || "샘플"} 사무실: 사장실과 유형별 직원 방`);
+  O.svg.querySelectorAll(".room").forEach(el => el.addEventListener("click", e => {
+    e.stopPropagation();
+    const ty = O.roomTypes?.[+el.dataset.room];
+    if (ty) openPop(O, "room", ty);
+  }));
+}
+
+// 사무실의 지금 상태 (머리줄, 정렬, 사장 말풍선이 같이 쓴다)
+function officeClock(O) {
+  if (state.mode === "demo") return { label: "경과", value: fmt(O.t) };
+  return sessionClockFor(O.s, O.m.byId.main, O.t, O.m.order.filter(a => a.id !== "main"));
+}
+function officeBusy(O) {
+  if (state.mode !== "demo" && O.s && Date.now() - O.s.last >= STALE_S * 1000) return "";
+  const ck = officeClock(O);
+  if (ck.label === "승인 대기") return "waiting";
+  if (ck.label === "처리 중" || ck.awaiting) return "busy";
+  // 메인은 쉬어도 백그라운드 서브에이전트가 일하는 중일 수 있다
+  if (!O.s?.ended && O.m.order.some(a => a.id !== "main" && statusAt(a, O.t) === "running")) return "busy";
+  if (!O.s?.ended && O.m.order.some(a => a.id !== "main" && statusAt(a, O.t) === "waiting")) return "waiting";
+  return "";
+}
+
+function updateHeader(O) {
+  const sec = O.sec, head = sec.querySelector(".osec-head");
+  const busy = officeBusy(O), ck = officeClock(O);
+  const name = state.mode === "demo" ? "샘플 · 결제 모듈 리팩터링" : projectLabel(O.project);
+  const sessionsTxt = O.sessionN > 1 ? `세션 ${O.sessionN}개${O.busyN > 1 ? ` (${O.busyN}개 일하는 중)` : ""}${O.sid === pinnedSid ? " · 고정" : ""}` : "";
+  const model = [O.m.byId.main ? [prettyModel(O.m.byId.main.model), O.m.byId.main.effort].filter(Boolean).join(" · ") : "", sessionsTxt].filter(Boolean).join(" · ");
+  const prompt = O.s?.prompt || (state.mode === "demo" ? "" : "");
+  const set = (sel, txt) => { const el = sec.querySelector(sel); if (el.textContent !== txt) el.textContent = txt; };
+  set(".osec-name", name);
+  set(".osec-st", ck.label ? `${ck.label} ${ck.value}` : ck.value);
+  set(".osec-meta", model);
+  set(".osec-prompt", prompt);
+  sec.querySelector(".osec-name").title = name;
+  sec.querySelector(".osec-prompt").title = prompt;
+  const cls = `osec${O.expanded ? "" : " collapsed"}${busy ? " " + busy : ""}${state.mode !== "demo" && O.project === liveProject ? " focused" : ""}${O.view === "timeline" ? " tl" : ""}`;
+  sec.querySelectorAll(".osec-view button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === O.view));
+  if (sec.className !== cls) sec.className = cls;
+  head.setAttribute("aria-expanded", O.expanded);
+  head.setAttribute("aria-label", `${name}, ${ck.label} ${ck.value}, ${O.expanded ? "접기" : "펼치기"}`);
+  sec.querySelector(".osec-close").setAttribute("aria-label", `${name} 사무실 닫기`);
+}
+
+// 오른쪽 상세 패널과 타임라인이 이 사무실의 세션을 보이게 한다
+function focusOffice(O) {
+  if (state.mode === "demo" || !O.project) return;
+  if (liveProject === O.project && liveSid === O.sid) return;
+  // 사무실을 눌러도 그 세션에 고정하지 않는다: 상세 패널이 이 사무실을 따라가게만 한다
+  liveProject = O.project; followProject = false;
+  if (pinnedSid && pinnedSid !== O.sid) pinnedSid = null;
+  state.sel = "main"; dirty = true; liveTick();
+}
+
+// 실시간: 보이는 프로젝트마다 사무실을 만들고, 각 사무실이 보여 줄 세션을 고른다
+function syncOffices(groups) {
+  const keep = new Set();
+  for (const g of groups) {
+    const list = [...sessions.values()].filter(s => s.active && projKey(s) === g.name).sort((a, b) => b.last - a.last);
+    if (!list.length) continue;
+    // 보여 줄 세션: 직접 고정한 세션 > 승인 대기 > 일하는 중 > 가장 최근
+    let best = null;
+    const pinned = pinnedSid && list.find(s => s.id === pinnedSid);
+    const cands = pinned ? [pinned] : list.filter(s => s === list[0] || (!s.ended && Date.now() - s.last < STALE_S * 1000));
+    let busyN = 0;
+    for (const s of cands) {
+      const m = treeOf(liveModel(s.id)), t = ((s.ended ? s.last : Date.now()) - s.first) / 1000;
+      const ck = sessionClockFor(s, m.byId.main, t, m.order.filter(a => a.id !== "main"));
+      const rank = ck.label === "승인 대기" ? 0 : (ck.label === "처리 중" || ck.awaiting) ? 1 : 2;
+      if (rank < 2) busyN++;
+      if (!best || rank < best.rank || (rank === best.rank && s.last > best.s.last)) best = { s, m, rank };
+    }
+    const O = offices.get(g.name) || createOffice(g.name);
+    O.project = g.name;
+    if (O.sid !== best.s.id) { O.sid = best.s.id; O.built = false; O.closed = new Set(); }
+    O.s = best.s; O.m = best.m;
+    O.sessionN = list.length; O.busyN = busyN;
+    keep.add(g.name);
+  }
+  for (const [k, O] of offices) if (!keep.has(k)) {
+    if (pop?.O === O) closePop();
+    if (O.view === "timeline") $("#lanes-home").appendChild($("#lanes"));   // 타임라인 요소가 사무실과 함께 지워지지 않게
+    O.sec.remove(); offices.delete(k);
+  }
+  arrangeOffices();
+}
+function arrangeOffices() {
+  for (const O of offices.values()) O.t = state.mode === "demo" ? state.t : (O.s ? ((O.s.ended ? O.s.last : Date.now()) - O.s.first) / 1000 : 0);
+  // 순서는 처음 나타난 순서로 고정한다(상태가 바뀔 때마다 자리를 바꾸면 보기 어렵다). 새 사무실은 맨 아래에 붙는다.
+  const all = [...offices.values()].sort((a, b) => a.seq - b.seq);
+  for (const O of all) {
+    // 펼침·접힘은 처음 나타날 때만 정한다(일하는 중이면 펼침). 그 뒤에는 사용자가 누를 때만 바뀐다.
+    if (O.expanded == null) {
+      const want = O.project && overrides[O.project] ? overrides[O.project] === "open" : (state.mode === "demo" || officeBusy(O) !== "");
+      O.expanded = want; if (want) O.built = false;
+    }
+  }
+  // 순서가 바뀔 때만 DOM을 옮긴다
+  const orderKey = all.map(O => O.key).join("|");
+  if (stackEl.dataset.order !== orderKey) { stackEl.dataset.order = orderKey; for (const O of all) stackEl.appendChild(O.sec); }
+  for (const O of all) {
+    if (O.view === "timeline" && state.mode !== "demo" && O.project !== liveProject) setOfficeView(O, "office");
+    updateHeader(O);
+  }
+  const empty = $("#office-empty");
+  empty.hidden = all.length > 0;
+}
+// 사무실별 보기 전환. 타임라인은 하나뿐이라 한 번에 한 사무실에만 붙는다.
+function setOfficeView(O, v) {
+  const lanes = $("#lanes"), body = O.sec.querySelector(".osec-body");
+  if (v === "timeline") {
+    for (const X of offices.values()) if (X !== O && X.view === "timeline") setOfficeView(X, "office");
+    O.view = "timeline";
+    if (!O.expanded) { O.expanded = true; if (O.project) overrides[O.project] = "open"; }
+    if (pop?.O === O) closePop();
+    focusOffice(O);                 // 타임라인이 이 사무실의 세션을 그리게 한다
+    body.appendChild(lanes);
+  } else {
+    O.view = "office";
+    if (lanes.parentNode === body) $("#lanes-home").appendChild(lanes);
+    O.built = false;
+  }
+  lastDetailKey = ""; updateHeader(O); render();
+}
+function scrollToProject(name) {
+  const O = offices.get(name); if (!O) return;
+  O.sec.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+}
+
+function makeFigure(O, key, color, isMain, onPick) {
+  const g = document.createElementNS(SVGNS, "g");
+  g.setAttribute("class", "worker");
+  g.setAttribute("tabindex", "0");
+  g.setAttribute("role", "button");
+  g.innerHTML = FIGURE_SVG(color, isMain);
+  const pick = e => { e.stopPropagation(); onPick(); };
+  g.addEventListener("click", pick);
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(e); } });
+  O.$("crew").appendChild(g);
+  return { g, x: 0, y: 0, flip: 1, mark: undefined, label: undefined, cls: "" };
+}
+function place(O, f, cls, onTop = false) {
+  if (f.cls !== cls) { f.g.setAttribute("class", cls); f.cls = cls; }
+  // 자리에 앉아 있을 때만 책상 뒤에, 걷거나 서 있을 때는 책상·가구보다 앞에 그린다
+  const layer = O.$(onTop ? "crew-top" : "crew");
+  if (f.g.parentNode !== layer) layer.appendChild(f.g);
+  f.g.setAttribute("transform", `translate(${f.x.toFixed(1)} ${f.y.toFixed(1)})`);
+  f.g.querySelector(".fig").setAttribute("transform", `scale(${f.flip} 1)`);
+}
+
+/* ── 카드 ─────────────────────────────────── */
+function openPop(O, kind, id) {
+  pop = { O, kind, id }; popKey = "";
+  focusOffice(O);
+  if (kind === "agent" || kind === "boss") select(kind === "boss" ? "main" : id);
+}
+function closePop() { pop = null; popKey = ""; $("#office-pop").hidden = true; }
+
+function popHtml(O, t) {
+  const p = pop, byIdO = O.m.byId;
+  const pill = st => `<span class="pop-st st-${st}"><span class="dot"></span>${STATUS_TEXT[st]}</span>`;
+  const recent = a => a.evs.filter(e => e.t0 <= t && e.cat !== "agent").slice(-3).reverse()
+    .map(e => `<li><i style="background:${CAT_COLOR[e.cat]}"></i><b>${esc(e.cat === "wait" ? "승인 대기" : e.tool)}</b><span>${esc(shortArg(e.arg, 30))}</span><time>${fmt(e.t0)}</time></li>`).join("");
+  const nowSec = w => `<section class="pop-now st-${w.st}"><h4>지금 하는 일</h4><p><i style="background:${w.cat ? CAT_COLOR[w.cat] || "#8a93a3" : "transparent"}"></i>${esc(w.title)}${w.since != null ? ` <time>${w.since.toFixed(0)}초째</time>` : ""}</p>${w.detail ? `<p class="mono">${esc(w.detail.length > 160 ? w.detail.slice(0, 159) + "…" : w.detail)}</p>` : ""}</section>`;
+  if (p.kind === "agent") {
+    const a = byIdO[p.id]; if (!a) return null;
+    const w = currentWork(a, t);
+    const elapsed = Math.min(t, a.end ?? t) - a.start;
+    return `<header><i class="sw-type" style="background:${typeColor(a.type)}"></i><div><strong>${esc(a.type)}</strong><span>${a.model ? esc(prettyModel(a.model)) + (a.effort ? " · " + esc(a.effort) : "") + " · " : ""}처리 시간 ${fmt(elapsed)}</span></div>${pill(w.st)}</header>
+      <section><h4>역할</h4><p>${esc(roleOf(a.type))}</p></section>
+      <section><h4>맡은 일</h4><p class="task">${esc(a.name)}</p>${a.prompt ? `<p class="sub">${esc(a.prompt.length > 140 ? a.prompt.slice(0, 139) + "…" : a.prompt)}</p>` : ""}</section>
+      ${nowSec(w)}
+      ${a.evs.length ? `<section><h4>최근 작업</h4><ul class="recent">${recent(a)}</ul></section>` : ""}
+      <footer><button class="btn" data-act="detail">전체 기록 보기</button></footer>`;
+  }
+  if (p.kind === "room") {
+    const ty = p.id;
+    return `<header><i class="sw-type" style="background:${typeColor(ty)}"></i><div><strong>${esc(ty)}</strong><span>${esc(shortType(ty))} 담당 방</span></div><span class="pop-st"><span class="dot"></span>월급루팡 중</span></header>
+      <section><h4>역할</h4><p>${esc(roleOf(ty))}</p></section>
+      <section><h4>지금 하는 일</h4><p class="sub">맡은 일이 없어 자리에서 쉬고 있습니다. 사장이 이 유형으로 일감을 주면 사장실로 가서 일을 받고 자리로 돌아와 일합니다.</p></section>`;
+  }
+  if (p.kind === "boss") {
+    const a = byIdO.main; if (!a) return null;
+    let w = currentWork(a, t);
+    const out = O.m.order.filter(x => x.id !== "main" && ["running", "waiting"].includes(statusAt(x, t)));
+    if (out.length && w.st !== "waiting" && (w.cat === "think" || w.st === "done"))
+      w = { st: "running", cat: "agent", title: `직원 보고 기다리는 중 (${out.length}명)`, detail: out.map(x => `${x.type} · ${x.name}`).join("\n") };
+    return `<header><i class="sw-type" style="background:${typeColor("main")}"></i><div><strong>사장 · 메인 세션</strong><span>${a.model ? esc(prettyModel(a.model)) + (a.effort ? " · " + esc(a.effort) : "") + " · " : ""}경과 ${fmt(Math.min(t, a.end ?? t))}</span></div>${pill(w.st)}</header>
+      <section><h4>역할</h4><p>${esc(ROLE_DESC.main)}</p></section>
+      ${a.prompt ? `<section><h4>받은 요청</h4><p class="sub">${esc(a.prompt.length > 160 ? a.prompt.slice(0, 159) + "…" : a.prompt)}</p></section>` : ""}
+      ${nowSec(w)}
+      <footer><button class="btn" data-act="detail">전체 기록 보기</button></footer>`;
+  }
+  return null;
+}
+
+function renderPop() {
+  const el = $("#office-pop");
+  if (!pop || !pop.O.expanded || !offices.has(pop.O.key)) { if (pop) closePop(); el.hidden = true; return; }
+  const O = pop.O, t = O.t, p = pop;
+  let key;
+  if (p.kind === "room") key = `room|${p.id}`;
+  else {
+    const a = O.m.byId[p.kind === "boss" ? "main" : p.id];
+    if (!a) { closePop(); return; }
+    const w = currentWork(a, t);
+    key = `${p.kind}|${a.id}|${w.st}|${w.title}|${w.detail}|${a.evs.length}|${Math.floor(t)}`;
+  }
+  if (key !== popKey) {
+    popKey = key;
+    const html = popHtml(O, t);
+    if (!html) { closePop(); return; }
+    el.innerHTML = html;
+  }
+  el.hidden = false;
+  // 누른 대상 근처에 띄운다
+  let anchor = null;
+  if (p.kind === "boss") anchor = { x: BOSS.x, y: BOSS.y + 64 };
+  else if (p.kind === "agent") { const f = O.instFig[p.id]; if (f) anchor = { x: f.x, y: f.y + 24 }; }
+  else { const i = (O.roomTypes || []).indexOf(p.id); if (i >= 0) { const r = roomRect(i); anchor = { x: r.x + r.w / 2, y: r.y + r.h - 6 }; } }
+  const host = $("#office"), box = host.getBoundingClientRect();
+  if (anchor && O.svg.getScreenCTM()) {
+    const pt = O.svg.createSVGPoint(); pt.x = anchor.x; pt.y = anchor.y;
+    const sp = pt.matrixTransform(O.svg.getScreenCTM());
+    const pw = el.offsetWidth;
+    const left = Math.max(8, Math.min(box.width - pw - 8, sp.x - box.left - pw / 2));
+    el.style.left = left + "px"; el.style.top = (sp.y - box.top + host.scrollTop + 8) + "px";
+  }
+}
+
+$("#office-pop").addEventListener("click", e => {
+  e.stopPropagation();
+  if (e.target.closest("[data-act=detail]") && pop) { focusOffice(pop.O); select(pop.kind === "boss" ? "main" : pop.id); }
+});
+$("#office").addEventListener("click", () => closePop());
+document.addEventListener("keydown", e => { if (e.key === "Escape" && pop) closePop(); });
+
+/* ── 프레임 ───────────────────────────────── */
+function frameOffice(O, now) {
+  const dt = Math.max(0, Math.min(0.1, (now - O.last) / 1000)); O.last = now;
+  if (!O.built) buildOffice(O);
+  const t = O.t, byIdO = O.m.byId;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const step = 250 * dt;
 
-  // 재생 위치가 뒤로 가면(다시 재생, 세션 전환) 상태를 초기화한다
-  if (t < office.lastT - 0.5 || office.sid !== liveSid) {
-    office.closed.clear(); office.instFig = {};
-    for (const f of Object.values(office.figs)) { f.inst = null; f.phase = "idle"; f.reset = true; }
-    office.sid = liveSid;
+  // 재생 위치가 뒤로 가면(데모 다시 재생) 상태를 초기화한다
+  if (t < O.lastT - 0.5) {
+    O.closed.clear(); O.instFig = {};
+    for (const f of Object.values(O.figs)) { f.inst = null; f.phase = "idle"; f.reset = true; }
   }
-  office.lastT = t;
+  O.lastT = t;
 
-  const subs = order.filter(a => a.id !== "main");
+  const subs = O.m.order.filter(a => a.id !== "main");
   const types = [...new Set([...DEFAULT_TYPES, ...subs.map(a => a.type)])].slice(0, 6);
-  office.roomTypes = types;
+  O.roomTypes = types;
+  const sessionOver = state.mode !== "demo" && !!O.s?.ended;
   const alive = new Set();
   let calling = false;
 
   types.forEach((ty, i) => {
+    // 끝난 세션은 다시 걷지 않고 모두 자리에서 쉬는 상태로 둔다
+    if (sessionOver) for (const f of Object.values(O.figs)) if (f.type === ty && f.inst) {
+      O.closed.add(f.inst); f.inst = null; f.phase = "idle"; snap(f, seatPos(i, f.seat));
+    }
     // 이 유형의 진행 중인 일감 (시작 순서), 이미 보고까지 끝난 것은 제외
-    const held = new Set(Object.values(office.figs).map(f => f.inst).filter(Boolean));
+    const held = new Set(Object.values(O.figs).map(f => f.inst).filter(Boolean));
     const active = subs.filter(a => {
-      if (a.type !== ty || t < a.start || office.closed.has(a.id)) return false;
+      if (sessionOver || a.type !== ty || t < a.start || O.closed.has(a.id)) return false;
       if (held.has(a.id) || a.end == null) return true;
       // 화면을 열기 전에 이미 끝나 보고까지 마쳤을 일감은 제외
       const grace = a.failed ? FAIL_STAY_S : 6;
-      if (t - a.end > grace) { office.closed.add(a.id); return false; }
+      if (t - a.end > grace) { O.closed.add(a.id); return false; }
       return true;
     }).sort((p, q) => p.start - q.start);
-    const seats = Math.min(3, Math.max(1, active.length, ...Object.values(office.figs).filter(f => f.type === ty && f.inst).map(f => f.seat + 1)));
+    const seats = Math.min(3, Math.max(1, active.length, ...Object.values(O.figs).filter(f => f.type === ty && f.inst).map(f => f.seat + 1)));
     for (let k = 0; k < 3; k++) {
       const key = `${ty}:${k}`;
-      let f = office.figs[key];
+      let f = O.figs[key];
       const holds = f?.inst && active.some(a => a.id === f.inst);
-      if (k >= seats && !holds) { if (f) { f.g.remove(); delete office.figs[key]; } continue; }
+      if (k >= seats && !holds) { if (f) { f.g.remove(); delete O.figs[key]; } continue; }
       if (!f) {
-        f = office.figs[key] = Object.assign(makeFigure(key, typeColor(ty), false, () => f.inst ? openPop("agent", f.inst) : openPop("room", ty)), { type: ty, seat: k, phase: "idle", inst: null });
+        f = O.figs[key] = Object.assign(makeFigure(O, key, typeColor(ty), false, () => f.inst ? openPop(O, "agent", f.inst) : openPop(O, "room", ty)), { type: ty, seat: k, phase: "idle", inst: null });
         snap(f, seatPos(i, k));
       }
       if (f.reset) { snap(f, seatPos(i, k)); f.reset = false; }
       alive.add(key);
       // 비어 있는 자리면 다음 일감을 맡는다
       if (!f.inst) {
-        const taken = new Set(Object.values(office.figs).map(x => x.inst).filter(Boolean));
+        const taken = new Set(Object.values(O.figs).map(x => x.inst).filter(Boolean));
         const next = active.find(a => !taken.has(a.id));
         if (next) {
           f.inst = next.id; f.phase = "toBoss"; f.arrivedAt = null;
@@ -1368,31 +1757,31 @@ function officeFrame(now) {
           if (reduce || t - next.start > 4) { f.phase = "work"; snap(f, seatPos(i, k)); }
         }
       }
-      const a = f.inst ? byId[f.inst] : null;
+      const a = f.inst ? byIdO[f.inst] : null;
       if (f.inst && !a) { f.inst = null; f.phase = "idle"; }
-      if (a) office.instFig[a.id] = f;
+      if (a) O.instFig[a.id] = f;
       const seat = seatPos(i, k);
       const st = a ? statusAt(a, t) : "idle";
-      let target = seat, arrived;
+      let target = seat;
       if (a) {
         const spot = { x: RECEIVE.x + [0, -44, 44][k], y: RECEIVE.y + (k ? 6 : 0) };  // 여러 명이면 나란히
         if (f.phase === "toBoss" || f.phase === "receive" || f.phase === "report") target = spot;
         if (f.phase === "work" && st === "done") f.phase = "report";
-        if (f.phase === "work" && st === "failed" && t - a.end > FAIL_STAY_S) { office.closed.add(a.id); f.inst = null; f.phase = "idle"; }
+        if (f.phase === "work" && st === "failed" && t - a.end > FAIL_STAY_S) { O.closed.add(a.id); f.inst = null; f.phase = "idle"; }
         if (f.phase === "report") target = spot;
       }
-      arrived = reduce ? (snap(f, target), true) : walk(f, target, step);
+      const arrived = reduce ? (snap(f, target), true) : walk(f, target, step);
       if (a && arrived) {
         if (f.phase === "toBoss") { f.phase = "receive"; f.arrivedAt = now; }
         else if (f.phase === "receive" && now - f.arrivedAt > PAUSE_MS) f.phase = "toSeat";
         else if (f.phase === "toSeat") f.phase = st === "done" ? "report" : "work";
         else if (f.phase === "report") { f.phase = "reportBack"; }
-        else if (f.phase === "reportBack") { office.closed.add(a.id); f.inst = null; f.phase = "idle"; }
+        else if (f.phase === "reportBack") { O.closed.add(a.id); f.inst = null; f.phase = "idle"; }
       }
       if (f.phase === "receive" || f.phase === "report") calling = true;
 
       const walking = f.path && f.path.length > 0;
-      const cur = f.inst ? byId[f.inst] : null;
+      const cur = f.inst ? byIdO[f.inst] : null;
       const curSt = cur ? statusAt(cur, t) : "idle";
       let mode = "slack", mark = null;
       if (cur && f.phase === "work") {
@@ -1402,34 +1791,43 @@ function officeFrame(now) {
       } else if (cur) mode = "idle";
       const cls = ["worker", cur ? `st-${curSt}` : "bench", walking ? "walking" : `m-${mode}`];
       if (f.phase === "report" || f.phase === "reportBack") cls.push("carry");
-      if (cur && office.pop?.kind === "agent" && office.pop.id === cur.id) cls.push("selected");
+      if (cur && pop?.O === O && pop.kind === "agent" && pop.id === cur.id) cls.push("selected");
       if (state.filter && cur && curSt !== state.filter) cls.push("dim");
       setLabel(f, walking ? shortType(ty) : "", cur ? `${cur.name} · ${STATUS_TEXT[curSt]}, 작업 보기` : `${ty} 담당, 월급루팡 중`);
       setMark(f, walking ? null : mark);
-      const standing = walking || ["toBoss", "receive", "report", "reportBack", "toSeat"].includes(f.phase) && !(f.phase === "toSeat" && !walking);
-      place(f, cls.join(" "), standing);
+      const standing = walking || ["toBoss", "receive", "report", "reportBack"].includes(f.phase);
+      place(O, f, cls.join(" "), standing);
     }
 
     // 방 명패와 상태줄
-    const working = Object.values(office.figs).filter(f => f.type === ty && f.inst && byId[f.inst]);
-    const main = working[0];
-    const ph = main ? phraseFor(main, byId[main.inst], t) : { text: "월급루팡 중", cat: null };
-    const st = main ? (main.phase === "work" ? statusAt(byId[main.inst], t) : "running") : null;
+    const working = Object.values(O.figs).filter(f => f.type === ty && f.inst && byIdO[f.inst]);
+    const lead = working[0];
+    const ph = lead ? phraseFor(lead, byIdO[lead.inst], t) : { text: "월급루팡 중", cat: null };
+    const st = lead ? (lead.phase === "work" ? statusAt(byIdO[lead.inst], t) : "running") : null;
     const more = working.length > 1 ? ` 외 ${working.length - 1}명` : "";
     const fitW = (str, max) => { let w = 0, out = ""; for (const ch of str) { w += ch.charCodeAt(0) > 0x2e80 ? 13 : 7.4; if (w > max) return out.trimEnd() + "…"; out += ch; } return out; };
-    const text = fitW(ph.text, 214 - (more ? 52 : 0)) + more;
-    const rkey = `${ty}|${st}|${text}|${ph.cat}|${working.map(f => f.seat).join("")}`;
-    if (office.roomKey[i] !== rkey) {
-      office.roomKey[i] = rkey;
-      document.getElementById("room-" + i).setAttribute("class", "room" + (st ? ` occupied st-${st}` : " idle"));
-      document.getElementById("room-name-" + i).textContent = ty;
+    // 일감을 받은 뒤 처리 중인 시간 (끝났으면 걸린 시간)
+    const job = lead ? byIdO[lead.inst] : null;
+    const timer = job ? fmt(Math.min(t, job.end ?? t) - job.start) : "";
+    const text = fitW(ph.text, 214 - (more ? 52 : 0) - (timer ? 46 : 0)) + more;
+    // 방 명패: 일하는 직원의 모델과 effort (예: "Haiku 5.5 · low")
+    const modelText = [...new Set(working.map(f => { const a = byIdO[f.inst]; return [prettyModel(a?.model), a?.effort].filter(Boolean).join(" · "); }).filter(Boolean))].join(", ");
+    const rkey = `${ty}|${st}|${text}|${ph.cat}|${working.map(f => f.seat).join("")}|${modelText}|${timer}|${Object.values(O.figs).filter(f => f.type === ty).map(f => f.seat).join("")}`;
+    if (O.roomKey[i] !== rkey) {
+      O.roomKey[i] = rkey;
+      O.$("room-" + i).setAttribute("class", "room" + (st ? ` occupied st-${st}` : " idle"));
+      O.$("room-name-" + i).textContent = ty;
+      // 역할 설명은 같은 줄 오른쪽의 모델·effort와 겹치지 않게 남는 폭에 맞춘다
       const role = roleOf(ty).replace(/입니다\.?$/, "");
-      document.getElementById("room-role-" + i).textContent = role.length > 26 ? role.slice(0, 25) + "…" : role;
-      document.getElementById("room-status-" + i).textContent = text;
-      document.getElementById("room-icon-" + i).innerHTML = ph.cat ? `<circle r="8" fill="${CAT_COLOR[ph.cat] || "#8a93a3"}"/><g transform="scale(.7)">${GLYPH[ph.cat] || ""}</g>` : `<circle r="8" fill="#d8dce4"/><text x="-3.5" y="3.5" class="zz-icon">z</text>`;
+      const modelW = [...modelText].reduce((w, ch) => w + (ch.charCodeAt(0) > 0x2e80 ? 12 : 6.6), 0);
+      O.$("room-role-" + i).textContent = fitW(role, ROOM_W - 36 - (modelText ? modelW + 12 : 0));
+      O.$("room-status-" + i).textContent = text;
+      O.$("room-model-" + i).textContent = modelText;
+      O.$("room-timer-" + i).textContent = timer;
+      O.$("room-icon-" + i).innerHTML = ph.cat ? `<circle r="8" fill="${CAT_COLOR[ph.cat] || "#8a93a3"}"/><g transform="scale(.7)">${GLYPH[ph.cat] || ""}</g>` : `<circle r="8" fill="#d8dce4"/><text x="-3.5" y="3.5" class="zz-icon">z</text>`;
       for (let k = 0; k < 3; k++) {
-        const lp = document.getElementById(`laptop-${i}-${k}`);
-        const occupied = Object.values(office.figs).some(f => f.type === ty && f.seat === k);
+        const lp = O.$(`laptop-${i}-${k}`);
+        const occupied = Object.values(O.figs).some(f => f.type === ty && f.seat === k);
         const busy = working.some(f => f.seat === k && f.phase === "work");
         lp.style.display = occupied ? "" : "none";
         lp.querySelector(".room-screen").style.fill = busy ? "#3f6fd8" : "";
@@ -1438,58 +1836,70 @@ function officeFrame(now) {
   });
   // 남는 방은 빈 방으로
   for (let i = types.length; i < 6; i++) {
-    if (office.roomKey[i] === "empty") continue;
-    office.roomKey[i] = "empty";
-    document.getElementById("room-" + i).setAttribute("class", "room empty");
-    document.getElementById("room-name-" + i).textContent = "빈 방";
-    document.getElementById("room-role-" + i).textContent = "새로운 유형의 직원이 오면 이 방을 씁니다";
-    document.getElementById("room-status-" + i).textContent = "";
-    document.getElementById("room-icon-" + i).innerHTML = "";
-    for (let k = 0; k < 3; k++) document.getElementById(`laptop-${i}-${k}`).style.display = "none";
+    if (O.roomKey[i] === "empty") continue;
+    O.roomKey[i] = "empty";
+    O.$("room-" + i).setAttribute("class", "room empty");
+    O.$("room-name-" + i).textContent = "빈 방";
+    O.$("room-role-" + i).textContent = "새로운 유형의 직원이 오면 이 방을 씁니다";
+    for (const k of ["status", "model", "timer"]) O.$(`room-${k}-${i}`).textContent = "";
+    O.$("room-icon-" + i).innerHTML = "";
+    for (let k = 0; k < 3; k++) O.$(`laptop-${i}-${k}`).style.display = "none";
   }
   // 방에 배정되지 않은 유형(6개 초과)은 그리지 않는다
-  for (const key of Object.keys(office.figs)) if (key !== "__boss" && !alive.has(key)) { office.figs[key].g.remove(); delete office.figs[key]; }
+  for (const key of Object.keys(O.figs)) if (key !== "__boss" && !alive.has(key)) { O.figs[key].g.remove(); delete O.figs[key]; }
 
   // 사장
-  const m = byId.main;
+  const m = byIdO.main;
   if (m) {
-    let f = office.figs.__boss;
-    if (!f) { f = office.figs.__boss = Object.assign(makeFigure("__boss", typeColor("main"), true, () => openPop("boss", "main")), { type: "__boss" }); snap(f, BOSS); }
-    alive.add("__boss");
+    let f = O.figs.__boss;
+    if (!f) { f = O.figs.__boss = Object.assign(makeFigure(O, "__boss", typeColor("main"), true, () => openPop(O, "boss", "main")), { type: "__boss" }); snap(f, BOSS); }
     const st = statusAt(m, t), w = currentWork(m, t);
     const spawning = m.evs.some(e => e.cat === "agent" && t - e.t0 >= 0 && t - e.t0 < 2.5);
-    const chip = calling ? "일감 건네는 중" : spawning ? "직원 호출 중" : st === "waiting" ? "승인 기다리는 중"
+    const ck = officeClock(O);
+    // 사장이 직접 하는 일이 없고 직원이 일하는 중이면 보고를 기다린다
+    const out = O.m.order.filter(a => a.id !== "main" && ["running", "waiting"].includes(statusAt(a, t))).length;
+    const ownWork = st === "running" && w.cat !== "think";
+    const awaiting = out > 0 && !ownWork && st !== "waiting";
+    const base = calling ? "일감 건네는 중" : spawning ? "직원 호출 중" : st === "waiting" ? "승인 기다리는 중"
+      : awaiting ? `보고 기다리는 중${out > 1 ? ` (${out}명)` : ""}`
       : st === "done" ? "한숨 돌리는 중" : w.cat === "think" ? "구상 중" : `직접 ${WORK_PHRASE[w.cat] || "작업 중"}`;
-    const ce = document.querySelector("#boss-chip .chip-text");
+    const away = state.mode !== "demo" && !awaiting && (ck.ended || ck.away);
+    const chip = ck.ended ? "퇴근" : away ? `자리 비움 · ${ck.value}` : ck.turn != null ? `${base} · ${fmt(ck.turn)}` : ck.awaiting && awaiting ? `${base} · ${ck.value}` : base;
+    const ce = O.$("chip-text");
     if (ce.textContent !== chip) {
       ce.textContent = chip;
       const bw = [...chip].reduce((s, ch) => s + (ch.charCodeAt(0) > 0x2e80 ? 13 : 7.5), 0) + 30;
-      const bg = document.querySelector("#boss-chip .chip-bg"); bg.setAttribute("x", -bw / 2); bg.setAttribute("width", bw);
+      const bg = O.$("chip-bg"); bg.setAttribute("x", -bw / 2); bg.setAttribute("width", bw);
     }
     f.flip = 1;
     setLabel(f, "", "사장(메인 세션), 상황 보기");
     setMark(f, st === "waiting" ? "wait" : null);
-    const sel = office.pop?.kind === "boss";
-    place(f, `worker boss st-${st} ${calling || spawning ? "m-work" : st === "waiting" ? "m-wait" : st === "running" && w.cat !== "think" ? "m-work" : "m-idle"}${sel ? " selected" : ""}`);
+    const sel = pop?.O === O && pop.kind === "boss";
+    place(O, f, `worker boss st-${st} ${away ? "m-slack" : calling || spawning ? "m-work" : st === "waiting" ? "m-wait" : awaiting ? "m-think" : st === "running" && w.cat !== "think" ? "m-work" : "m-idle"}${sel ? " selected" : ""}`);
   }
 
+  const bm = m ? [prettyModel(m.model), m.effort].filter(Boolean).join(" · ") : "";
+  if (O.$("boss-model").textContent !== bm) O.$("boss-model").textContent = bm;
   const sec = t % 60, min = (t / 60) % 60;
-  document.getElementById("clock-s").setAttribute("transform", `rotate(${sec * 6} 276 50)`);
-  document.getElementById("clock-m").setAttribute("transform", `rotate(${min * 6} 276 50)`);
-  document.getElementById("office-clock").textContent = fmt(t);
-  renderPop(t);
+  O.$("clock-s").setAttribute("transform", `rotate(${sec * 6} 276 50)`);
+  O.$("clock-m").setAttribute("transform", `rotate(${min * 6} 276 50)`);
+  O.$("office-clock").textContent = fmt(t);
 }
 
-function setView(v) {
-  state.view = v;
-  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
-  $("#lanes").hidden = v !== "timeline";
-  $("#office").hidden = v !== "office";
-  $("#legend-items").hidden = v !== "timeline";
-  $("#legend-office").hidden = v !== "office";
-  try { localStorage.setItem("monitor.view.v2", v); } catch {}
+let headerTick = 0, pendingTimeline = false;
+function officeFrame(now) {
+  if (state.view !== "office") return;
+  if (state.mode === "demo") { const O = offices.get("__demo"); if (O) { O.t = state.t; } }
+  if (initPop) {
+    const O = offices.get(state.mode === "demo" ? "__demo" : liveProject) || offices.values().next().value;
+    if (O) { pop = { O, ...initPop }; initPop = null; }
+  }
+  if (pendingTimeline && offices.size) { pendingTimeline = false; setOfficeView(offices.get(liveProject) || offices.values().next().value, "timeline"); }
+  for (const O of offices.values()) if (O.expanded && O.view !== "timeline") frameOffice(O, now);
+  if (now - headerTick > 500) { headerTick = now; for (const O of offices.values()) updateHeader(O); }
+  renderPop();
 }
-document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
+
 (function officeLoop(ts) { officeFrame(ts); requestAnimationFrame(officeLoop); })(performance.now());
 
 const q = new URLSearchParams(location.search);
@@ -1498,13 +1908,16 @@ if (location.protocol.startsWith("http") && q.get("demo") !== "1") {
 } else {
   setModel(demoModel());
   state.total = Math.ceil(Math.max(...agents.map(a => a.end)) + 4);
+  const demoOffice = createOffice("__demo");
+  demoOffice.m = { agents, byId, order };
   if (q.has("t")) { state.t = +q.get("t"); state.playing = false; }
   if (q.has("sel")) state.sel = q.get("sel");
   syncPlay(); render();
 }
-let savedView = null; try { savedView = localStorage.getItem("monitor.view.v2"); } catch {}
-setView(q.get("view") || savedView || "office");
-if (q.has("pop")) { const [k, ...rest] = q.get("pop").split(":"); office.pop = { kind: k === "bench" ? "room" : k, id: rest.join(":") }; }
+state.view = "office";
+pendingTimeline = q.get("view") === "timeline";   // ?view=timeline 이면 첫 사무실을 타임라인으로 연다
+if (state.mode === "demo") arrangeOffices();
+if (q.has("pop")) { const [k, ...rest] = q.get("pop").split(":"); initPop = { kind: k === "bench" ? "room" : k, id: rest.join(":") }; }
 requestAnimationFrame(frame);
 </script>
 </body>
