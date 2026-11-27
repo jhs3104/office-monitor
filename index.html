@@ -353,6 +353,20 @@
   .office-svg .room.st-failed .room-lamp { fill: var(--fail); }
   .office-svg .room.st-failed .room-status text { fill: var(--fail); }
   .office-svg .room.st-done .room-lamp { fill: var(--ok); }
+  .office-svg .room.rep-ok .room-lamp { fill: var(--ok); }
+  .office-svg .room.rep-ok .room-status text { fill: var(--ok); }
+  .office-svg .room.rep-fail .room-lamp { fill: var(--fail); }
+  .office-svg .room.rep-fail .room-status text { fill: var(--fail); }
+  .pop .report { white-space: pre-line; overflow-wrap: anywhere; font-size: 12.5px; color: var(--ink-2); }
+  .pop .reports { list-style: none; margin: 0; padding: 0; }
+  .pop .reports li { display: grid; grid-template-columns: 14px 1fr auto; column-gap: 6px; align-items: baseline; padding: 3px 0; font-size: 12px; }
+  .pop .reports li > b { font-weight: 700; }
+  .pop .reports li.ok > b { color: var(--ok); }
+  .pop .reports li.fail > b { color: var(--fail); }
+  .pop .reports li.run > b { color: var(--accent); }
+  .pop .reports span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pop .reports em { grid-column: 2 / -1; font-style: normal; color: var(--ink-3); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pop .reports time { font: 11px var(--mono); color: var(--ink-3); }
   @keyframes lamp { 50% { opacity: .35; } }
 
   .worker { cursor: pointer; outline: none; transition: opacity .4s var(--ease); }
@@ -601,7 +615,7 @@ const CAT = { Read: "search", Grep: "search", Glob: "search", LS: "search", Edit
   permission: "wait", error: "err" };
 const catOf = tool => CAT[tool] || (tool && tool.startsWith("mcp__") ? "web" : "other");
 const CAT_COLOR = { search: "var(--c-search)", edit: "var(--c-edit)", shell: "var(--c-shell)", web: "var(--c-web)",
-  agent: "var(--c-agent)", wait: "var(--c-wait)", err: "var(--fail)", other: "#8a93a3" };
+  agent: "var(--c-agent)", wait: "var(--c-wait)", err: "var(--fail)", done: "var(--ok)", other: "#8a93a3" };
 const STATUS_TEXT = { pending: "시작 전", running: "실행 중", waiting: "승인 대기", done: "완료", failed: "실패" };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -693,6 +707,7 @@ function liveModel(sid) {
       case "SessionStart": if (e.model) main.model = e.model; break;
       case "UserPromptSubmit":
         if (!main.prompt) main.prompt = e.prompt;
+        main.lastPrompt = e.prompt;
         main.turnStart = t;            // 지금 처리 중인 요청이 들어온 시각
         main.end = null; break;
       case "PreToolUse": {
@@ -1229,6 +1244,7 @@ const GLYPH = {
   think: `<circle cx="-4" r="1.6" fill="#fff"/><circle r="1.6" fill="#fff"/><circle cx="4" r="1.6" fill="#fff"/>`,
   wait: `<path d="M0 -6v7" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cy="5" r="1.5" fill="#fff"/>`,
   err: `<path d="M-4 -4l8 8M4 -4l-8 8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`,
+  done: `<path d="M-5 0l3.5 3.5L5 -4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
 };
 
 function roomSvg(i) {
@@ -1640,7 +1656,8 @@ function popHtml(O, t) {
     const ty = p.id;
     return `<header><i class="sw-type" style="background:${typeColor(ty)}"></i><div><strong>${esc(ty)}</strong><span>${esc(shortType(ty))} 담당 방</span></div><span class="pop-st"><span class="dot"></span>월급루팡 중</span></header>
       <section><h4>역할</h4><p>${esc(roleOf(ty))}</p></section>
-      <section><h4>지금 하는 일</h4><p class="sub">맡은 일이 없어 자리에서 쉬고 있습니다. 사장이 이 유형으로 일감을 주면 사장실로 가서 일을 받고 자리로 돌아와 일합니다.</p></section>`;
+      <section><h4>지금 하는 일</h4><p class="sub">맡은 일이 없어 자리에서 쉬고 있습니다. 사장이 이 유형으로 일감을 주면 사장실로 가서 일을 받고 자리로 돌아와 일합니다.</p></section>
+      ${roomReport(O, ty, t)}`;
   }
   if (p.kind === "boss") {
     const a = byIdO.main; if (!a) return null;
@@ -1650,11 +1667,36 @@ function popHtml(O, t) {
       w = { st: "running", cat: "agent", title: `직원 보고 기다리는 중 (${out.length}명)`, detail: out.map(x => `${x.type} · ${x.name}`).join("\n") };
     return `<header><i class="sw-type" style="background:${typeColor("main")}"></i><div><strong>사장 · 메인 세션</strong><span>${a.model ? esc(prettyModel(a.model)) + (a.effort ? " · " + esc(a.effort) : "") + " · " : ""}경과 ${fmt(Math.min(t, a.end ?? t))}</span></div>${pill(w.st)}</header>
       <section><h4>역할</h4><p>${esc(ROLE_DESC.main)}</p></section>
-      ${a.prompt ? `<section><h4>받은 요청</h4><p class="sub">${esc(a.prompt.length > 160 ? a.prompt.slice(0, 159) + "…" : a.prompt)}</p></section>` : ""}
-      ${nowSec(w)}
+      ${(a.lastPrompt || a.prompt) ? `<section><h4>받은 요청</h4><p class="sub">${esc(clip(a.lastPrompt || a.prompt, 160))}</p></section>` : ""}
+      ${w.st === "done" ? `<section class="pop-now st-done"><h4>결과 요약 · ${agoText(t - a.end)}</h4>${a.result ? `<p class="report">${esc(clip(a.result, 280))}</p>` : `<p class="sub">요청을 마쳤습니다.</p>`}</section>` : nowSec(w)}
+      ${bossReports(O, a, t)}
       <footer><button class="btn" data-act="detail">전체 기록 보기</button></footer>`;
   }
   return null;
+}
+
+// 방 카드: 이 유형의 마지막 보고
+function roomReport(O, ty, t) {
+  const r = lastReport(O, O.m.order, ty, t);
+  if (!r) return "";
+  const body = r.failed ? r.error : r.result;
+  return `<section><h4>마지막 보고 · ${agoText(t - r.end)} · 걸린 시간 ${fmt(r.end - r.start)}</h4><p class="task">${r.failed ? "✗ " : "✓ "}${esc(r.name)}</p>${body ? `<p class="report">${esc(clip(body, 240))}</p>` : ""}</section>`;
+}
+// 사장 카드: 이번 요청에서 직원들이 한 일 (보고를 마친 것과 아직 일하는 것)
+function bossReports(O, main, t) {
+  const from = main.turnStart ?? 0;
+  const list = O.m.order.filter(x => x.id !== "main" && t >= x.start && (x.end == null || x.end >= from))
+    .sort((p, q) => (q.end ?? Infinity) - (p.end ?? Infinity) || q.start - p.start);
+  if (!list.length) return "";
+  const rows = list.slice(0, 5).map(x => {
+    const st = statusAt(x, t), fin = st === "done" || st === "failed";
+    const cls = st === "failed" ? "fail" : fin ? "ok" : "run";
+    const mark = st === "failed" ? "✗" : fin ? "✓" : "…";
+    const note = fin ? (x.failed ? x.error : x.result) : st === "waiting" ? "승인 기다리는 중" : "일하는 중";
+    return `<li class="${cls}"><b>${mark}</b><span>${esc(x.type)} · ${esc(x.name)}</span><time>${fmt(Math.min(t, x.end ?? t) - x.start)}</time>${note ? `<em>${esc(clip(String(note).replace(/\s+/g, " "), 90))}</em>` : ""}</li>`;
+  }).join("");
+  const done = list.filter(x => x.end != null && t >= x.end).length;
+  return `<section><h4>직원 보고 ${done}/${list.length}</h4><ul class="reports">${rows}</ul>${list.length > 5 ? `<p class="sub">외 ${list.length - 5}건은 전체 기록에서 볼 수 있습니다.</p>` : ""}</section>`;
 }
 
 function renderPop() {
@@ -1662,7 +1704,7 @@ function renderPop() {
   if (!pop || !pop.O.expanded || !offices.has(pop.O.key)) { if (pop) closePop(); el.hidden = true; return; }
   const O = pop.O, t = O.t, p = pop;
   let key;
-  if (p.kind === "room") key = `room|${p.id}`;
+  if (p.kind === "room") key = `room|${p.id}|${Math.floor(t / 30)}`;
   else {
     const a = O.m.byId[p.kind === "boss" ? "main" : p.id];
     if (!a) { closePop(); return; }
@@ -1698,6 +1740,48 @@ $("#office-pop").addEventListener("click", e => {
 $("#office").addEventListener("click", () => closePop());
 document.addEventListener("keydown", e => { if (e.key === "Escape" && pop) closePop(); });
 
+/* ── 방 배정 ───────────────────────────────── */
+// 방은 6개다. 이 세션에서 실제로 일한 유형이 방을 먼저 받고, 남는 칸만 기본 유형으로 채운다.
+// 새 유형이 오면 아무도 일하지 않는 방 중 가장 오래 안 쓴 방(이 세션에서 한 번도 안 쓴 기본 유형부터)을 내준다.
+// 한 번 받은 방은 옮기지 않아 화면이 자꾸 바뀌지 않는다.
+const REPORT_KEEP_S = 600;   // 보고 완료 표시를 남겨 두는 시간
+function pickRooms(O, subs, t, sessionOver) {
+  const seen = subs.filter(a => t >= a.start).sort((p, q) => p.start - q.start);
+  const lastUse = {};
+  for (const a of seen) lastUse[a.type] = Math.max(lastUse[a.type] ?? -Infinity, a.start);
+  const firstSeen = [...new Set(seen.map(a => a.type))];
+  if (!O.roomTypes) {
+    const recent = new Set([...firstSeen].sort((p, q) => lastUse[q] - lastUse[p]).slice(0, 6));
+    O.roomTypes = [...new Set([...firstSeen.filter(x => recent.has(x)), ...DEFAULT_TYPES])].slice(0, 6);
+  }
+  const rooms = [...O.roomTypes];
+  if (sessionOver) return rooms;
+  const held = new Set(Object.values(O.figs).map(f => f.inst).filter(Boolean));
+  const busy = new Set(seen.filter(a => !O.closed.has(a.id) &&
+    (held.has(a.id) || a.end == null || t - a.end <= (a.failed ? FAIL_STAY_S : 6))).map(a => a.type));
+  // 일하는 유형부터, 그다음 최근에 일한 유형 순으로 방을 찾아 준다
+  const want = [...busy, ...[...firstSeen].sort((p, q) => lastUse[q] - lastUse[p])];
+  for (const ty of new Set(want)) {
+    if (rooms.includes(ty)) continue;
+    if (rooms.length < 6) { rooms.push(ty); continue; }
+    let best = -1, bestUse = Infinity;
+    for (let i = rooms.length - 1; i >= 0; i--) {
+      if (busy.has(rooms[i])) continue;
+      const u = lastUse[rooms[i]] ?? -Infinity;
+      if (u < bestUse) { bestUse = u; best = i; }
+    }
+    // 일하는 중이거나 더 최근에 일한 유형일 때만 바꾼다(6개 넘게 동시에 일하면 넘치는 유형은 그리지 않는다)
+    if (best >= 0 && (busy.has(ty) || lastUse[ty] > bestUse)) rooms[best] = ty;
+  }
+  return rooms;
+}
+// 이 유형의 가장 최근 보고 (보고하러 다녀온 뒤의 것만)
+function lastReport(O, subs, ty, t, within = Infinity) {
+  return subs.filter(a => a.type === ty && a.end != null && t >= a.end && t - a.end < within && O.closed.has(a.id))
+    .sort((p, q) => q.end - p.end)[0] || null;
+}
+const clip = (s, n) => { s = String(s || "").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
+
 /* ── 프레임 ───────────────────────────────── */
 function frameOffice(O, now) {
   const dt = Math.max(0, Math.min(0.1, (now - O.last) / 1000)); O.last = now;
@@ -1714,9 +1798,9 @@ function frameOffice(O, now) {
   O.lastT = t;
 
   const subs = O.m.order.filter(a => a.id !== "main");
-  const types = [...new Set([...DEFAULT_TYPES, ...subs.map(a => a.type)])].slice(0, 6);
-  O.roomTypes = types;
   const sessionOver = state.mode !== "demo" && !!O.s?.ended;
+  const types = pickRooms(O, subs, t, sessionOver);
+  O.roomTypes = types;
   const alive = new Set();
   let calling = false;
 
@@ -1802,20 +1886,24 @@ function frameOffice(O, now) {
     // 방 명패와 상태줄
     const working = Object.values(O.figs).filter(f => f.type === ty && f.inst && byIdO[f.inst]);
     const lead = working[0];
-    const ph = lead ? phraseFor(lead, byIdO[lead.inst], t) : { text: "월급루팡 중", cat: null };
+    // 쉬는 중이어도 방금 보고를 마쳤으면 잠시 결과를 남겨 둔다
+    const rep = lead ? null : lastReport(O, subs, ty, t, REPORT_KEEP_S);
+    const ph = lead ? phraseFor(lead, byIdO[lead.inst], t)
+      : rep ? { text: `${rep.failed ? "실패 보고" : "보고 완료"} · ${agoText(t - rep.end)}`, cat: rep.failed ? "err" : "done" }
+      : { text: "월급루팡 중", cat: null };
     const st = lead ? (lead.phase === "work" ? statusAt(byIdO[lead.inst], t) : "running") : null;
     const more = working.length > 1 ? ` 외 ${working.length - 1}명` : "";
     const fitW = (str, max) => { let w = 0, out = ""; for (const ch of str) { w += ch.charCodeAt(0) > 0x2e80 ? 13 : 7.4; if (w > max) return out.trimEnd() + "…"; out += ch; } return out; };
     // 일감을 받은 뒤 처리 중인 시간 (끝났으면 걸린 시간)
     const job = lead ? byIdO[lead.inst] : null;
-    const timer = job ? fmt(Math.min(t, job.end ?? t) - job.start) : "";
+    const timer = job ? fmt(Math.min(t, job.end ?? t) - job.start) : rep ? fmt(rep.end - rep.start) : "";
     const text = fitW(ph.text, 214 - (more ? 52 : 0) - (timer ? 46 : 0)) + more;
     // 방 명패: 일하는 직원의 모델과 effort (예: "Haiku 5.5 · low")
     const modelText = [...new Set(working.map(f => { const a = byIdO[f.inst]; return [prettyModel(a?.model), a?.effort].filter(Boolean).join(" · "); }).filter(Boolean))].join(", ");
     const rkey = `${ty}|${st}|${text}|${ph.cat}|${working.map(f => f.seat).join("")}|${modelText}|${timer}|${Object.values(O.figs).filter(f => f.type === ty).map(f => f.seat).join("")}`;
     if (O.roomKey[i] !== rkey) {
       O.roomKey[i] = rkey;
-      O.$("room-" + i).setAttribute("class", "room" + (st ? ` occupied st-${st}` : " idle"));
+      O.$("room-" + i).setAttribute("class", "room" + (st ? ` occupied st-${st}` : rep ? ` idle rep-${rep.failed ? "fail" : "ok"}` : " idle"));
       O.$("room-name-" + i).textContent = ty;
       // 역할 설명은 같은 줄 오른쪽의 모델·effort와 겹치지 않게 남는 폭에 맞춘다
       const role = roleOf(ty).replace(/입니다\.?$/, "");
